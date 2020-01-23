@@ -1,0 +1,6 @@
+compile:
+    nasm -I include/ -o mbr.bin mbr.s
+
+write to hd:
+    dd if=./mbr.bin of=../bochs/c.img bs=512 count=1 conv=notrunc
+    dd if=./loader.bin of=../bochs/c.img bs=512 count=1 seek=1 conv=notrunc
