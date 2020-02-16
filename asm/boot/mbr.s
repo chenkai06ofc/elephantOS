@@ -26,34 +26,22 @@ mov cx, [loading_msg_len]
 mov dx, 0x0100  ; print at row:1, column:0
 call print_str_at
 
+; ---------- load loader module from hd ----------
+mov eax, LOADER_START_SECTOR
+mov bx, LOADER_BASE_ADDR
+mov cx, LOADER_SECTOR_COUNT
+call read_disk
+
 ; ---------- print loaded_msg ----------
 mov ax, loaded_msg
 mov cx, [loaded_msg_len]
 mov dx, 0x0200  ; print at row:2, column:0
 call print_str_at
 
-jmp $
+jmp LOADER_BASE_ADDR ; jump to execute loader
 
-; function: print string at a given cursor position
-; (dh, dl): (row, column) of cursor position
-; ax: string address, cx: string len
-print_str_at:
-    ; set cursor position
-    push ax
-    push cx
-    mov ah, 2       ; 0x02 function of INT 0x10: set cursor position
-    mov bh, 0       ; page number
-    int 0x10
-    ; print string
-    pop cx
-    pop ax
-    mov bp, ax
-    mov ah, 0x13    ; 0x13 function of INT 0x10: write string
-    mov al, 0x01    ; write mode is 01, update cursor after writing
-    mov bx, 0x07    ; bh = 0: page number; bl = 7: background black, foreground light gray
-    int 0x10
-    ret
-
+%include "util_print.s"
+%include "util_hd.s"
 welcome_msg db "welcome to elephant OS"
 welcome_msg_len dw $-welcome_msg
 
