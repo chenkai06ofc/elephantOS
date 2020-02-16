@@ -1,3 +1,12 @@
+; function: clear screen
+clear_screen:
+    mov ax, 0x0600  ; ah = 6, al = 0; 0x06 function of INT 0x10: clear screen
+    mov bx, 0x700   ; bh = 0x07, background color is black, foreground color is light gray
+    mov cx, 0       ; (cl, ch) = (0, 0), (x, y) of left-up position
+    mov dx, 0x184f  ; (dl, dh) = (79, 24), (x, y) of right-down position
+    int 0x10
+    ret
+
 ; function: print string at a given cursor position
 ; arguments:
 ; (dh, dl): (row, column) of cursor position
