@@ -1,0 +1,10 @@
+This directory contains all assembly code to bootstrap system.
+
+mbr.s
+    Located at disk sector 0.
+    Will be loaded at memory:0x7c00 by BIOS.
+    Its main role is to load loader module to memory then transfer to it.
+
+loader.s
+    Located at disk sector 1 ~ 4.
+    Will be loaded at memory:0x0900 by mbr module.
