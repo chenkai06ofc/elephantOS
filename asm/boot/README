@@ -8,3 +8,11 @@ mbr.s
 loader.s
     Located at disk sector 1 ~ 4.
     Will be loaded at memory:0x0900 by mbr module.
+
+commands:
+    compile:
+        nasm -I include/ -o mbr.bin mbr.s
+
+    write to hd:
+        dd if=./mbr.bin of=../../bochs/c.img bs=512 count=1 conv=notrunc
+        dd if=./loader.bin of=../../bochs/c.img bs=512 count=4 seek=1 conv=notrunc
