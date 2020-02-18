@@ -6,9 +6,9 @@ jmp loader_start
 
 ;---------- GDT table ----------
 GDT_BASE: dd 0x00000000, 0x00000000
-CODE_DESC: dd 0x0000FFFF, DESC_CODE_HIGH4
-DATA_STACK_DESC: dd 0x0000FFFF, DESC_DATA_HIGH4
-VIDEO_DESC: dd 0x80000007, DESC_VIDEO_HIGH4 ;limit=(0xbffff-0xb8000)/4k=0x7
+CODE_DESC: dd DESC_CODE_LOW, DESC_CODE_HIGH
+DATA_STACK_DESC: dd DESC_DATA_LOW, DESC_DATA_HIGH
+VIDEO_DESC: dd DESC_PHY_VIDEO_LOW, DESC_PHY_VIDEO_HIGH ;limit=(0xbffff-0xb8000)/4k=0x7
 ;---------- selector definition ----------
 SELECTOR_CODE equ (0x0001<<3) + TI_GDT + RPL0
 SELECTOR_DATA equ (0x0002<<3) + TI_GDT + RPL0
@@ -20,8 +20,8 @@ GDT_LIMIT equ GDT_SIZE - 1
 gdt_ptr dw GDT_LIMIT
         dd GDT_BASE
 
-msg db "loader is running"
-msg_len dw $-msg
+msg: db "loader is running..."
+msg_len: dw $-msg
 
 ; code start here
 loader_start:
@@ -79,19 +79,19 @@ protected_mode_start:
     mov byte [gs:160], 'P'
     mov byte [gs:161], 0xa4
 
+    ; ---------- prepare to reload gdt ----------
+    sgdt [gdt_ptr]
+    mov dword [VIDEO_DESC], DESC_VIR_VIDEO_LOW
+    mov dword [VIDEO_DESC + 4], DESC_VIR_VIDEO_HIGH
+    add dword [gdt_ptr + 2], 0xc000_0000
+
     ; ---------- Steps to enable paging ----------
     ; 1. prepare PDE $ PTE
     ; 2. write Page Dir Table addr to cr3
     ; 3. set cr0.pg
     ; ---------- prepare PDE $ PTE ----------
     call setup_page
-
-    sgdt [gdt_ptr]
-    mov ebx, [gdt_ptr + 2]
-    or dword [ebx + 0x18 + 4], 0xc000_0000
-    add dword [gdt_ptr + 2], 0xc000_0000
     add esp, 0xc000_0000
-
     ; ---------- write Page Dir Table addr to cr3 ----------
     mov eax, PAGE_DIR_TABLE_ADDR
     mov cr3, eax
@@ -100,7 +100,12 @@ protected_mode_start:
     or eax, 0x8000_0000
     mov cr0, eax
 
+    ; reload gdt
     lgdt [gdt_ptr]
+
+    mov ax, SELECTOR_VIDEO
+    mov gs, ax
+    
     mov byte [gs:240], 'Y'
     mov byte [gs:241], 0xa4
 
