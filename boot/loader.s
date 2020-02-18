@@ -1,5 +1,6 @@
 %include "boot.s"
 %include "gdt.s"
+%include "elf.s"
 
 SECTION LOADER vstart=LOADER_BASE_ADDR
 jmp loader_start
@@ -109,9 +110,13 @@ protected_mode_start:
     mov byte [gs:240], 'Y'
     mov byte [gs:241], 0xa4
 
+enter_kernel:
+    call kernel_init
+    jmp KERNEL_ENTRY_POINT
+
     jmp $
 
-; function
+; -------------------- function setup_page --------------------
 ; put Page Dir Table in 0x100000(1m), and Page Table Entry(PTE) after it
 setup_page:
     ; clear space for PDE (4k)
@@ -151,4 +156,38 @@ setup_page:
     inc esi
     add eax, 0x1000
     loop .create_kernel_pde
+    ret
+
+; -------------------- function kernel_init --------------------
+kernel_init:
+    xor ecx, ecx
+    xor edx, edx
+
+    mov dx, [KERNEL_BIN_ADDR + E_PHENTSIZE_OFFSET] ; dx is program header size
+    mov ebx, [KERNEL_BIN_ADDR + E_PHOFF_OFFSET] ; ebx is e_phoff
+    add ebx, KERNEL_BIN_ADDR ; now ebx is addr of 1st program header
+    mov cx, [KERNEL_BIN_ADDR + E_PHNUM_OFFSET]
+
+; use ebx as addr of each program header
+.each_segment:
+    cmp byte [ebx + P_TYPE_OFFSET], PT_NULL
+    je .if_pt_null
+    push ecx
+    mov ecx, [ebx + P_FILESZ_OFFSET]
+    mov esi, [ebx + P_OFFSET_OFFSET]
+    add esi, KERNEL_BIN_ADDR
+    mov edi, [ebx + P_VADDR_OFFSET]
+    call mem_cpy
+    pop ecx
+.if_pt_null:
+    add ebx, edx
+    loop .each_segment
+    ret
+
+; -------------------- function mem_cpy --------------------
+; arguments
+;   edi: dst, esi: src, ecx: size
+mem_cpy:
+    cld
+    rep movsb
     ret

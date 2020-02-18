@@ -11,8 +11,10 @@ LOADER_STACK_TOP equ LOADER_BASE_ADDR
 ; ---------- kernel ----------
 KERNEL_START_SECTOR equ 9
 KERNEL_SECTOR_COUNT equ 200
+KERNEL_BIN_ADDR equ 0x70000
 KERNEL_BIN_ADDR_SEGMENT equ 0x7000 ; kernel is loaded into 0x70000
 KERNEL_BIN_ADDR_OFFSET equ 0
+KERNEL_ENTRY_POINT equ 0xc0001500
 
 ; ---------- page table ----------
 PAGE_DIR_TABLE_ADDR equ 0x10_0000
