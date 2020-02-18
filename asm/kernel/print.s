@@ -56,7 +56,8 @@ put_char:
     shr bx, 1
     inc bx
     call .set_cursor
-    ret
+    popad
+    ret ; end function call
 
 .is_backspace:
     dec bx
@@ -64,7 +65,8 @@ put_char:
     mov word [gs:bx], CHAR_SPACE_WITH_ATTR
     shr bx, 1
     call .set_cursor
-    ret
+    popad
+    ret ; end function call
 
 ; CR & LF is handled together
 .is_line_feed:
@@ -82,7 +84,8 @@ put_char:
     mov bx, 1920
 .no_screen_overflow:
     call .set_cursor
-    ret
+    popad
+    ret ; end function call
 
 
 
@@ -98,7 +101,7 @@ put_char:
     out dx, al
     mov dx, DATA_IO_PORT
     mov al, bh
-    out dx, alggit
+    out dx, al
     ; set low 8 bits
     mov dx, ADDR_IO_PORT
     mov al, IDX_CURSOR_LOCATION_LOW
