@@ -129,3 +129,23 @@ put_char:
     add esi, 2
     loop .clear_last_row
     ret
+
+global put_str
+put_str:
+    push ebx
+    push ecx
+    xor ecx, ecx
+    mov ebx, [esp + 12]
+.go_on_put_char:
+    mov cl, [ebx]
+    cmp cl, 0
+    je .end_put_char
+    push ecx
+    call put_char
+    add esp, 4
+    inc ebx
+    jmp .go_on_put_char
+.end_put_char:
+    pop ecx
+    pop ebx
+    ret
