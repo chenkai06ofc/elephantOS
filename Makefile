@@ -14,12 +14,27 @@ $(build_dir)/loader.bin: $(build_dir) boot/loader.s
 $(build_dir)/lib/kernel/print.o: $(build_dir) lib/kernel/print.s
 	nasm -f elf -o $@ lib/kernel/print.s
 
+# kernel modules
+$(build_dir)/kernel/intr_entry_list.o: $(build_dir) kernel/intr_entry_list.s
+	nasm -f elf -o $@ kernel/intr_entry_list.s
+
+$(build_dir)/kernel/interrupt.o: $(build_dir) kernel/interrupt.c
+	gcc -m32 -c -fno-stack-protector -I lib/ -I lib/kernel/ -o $@ kernel/interrupt.c
+
 $(build_dir)/kernel/main.o: $(build_dir) kernel/main.c
 	gcc -m32 -c -I lib/kernel/ -o $@ kernel/main.c
 
-$(build_dir)/kernel.bin: $(build_dir) $(build_dir)/kernel/main.o $(build_dir)/lib/kernel/print.o
+$(build_dir)/kernel.bin: $(build_dir) \
+		$(build_dir)/kernel/main.o \
+		$(build_dir)/kernel/interrupt.o \
+		$(build_dir)/kernel/intr_entry_list.o \
+		$(build_dir)/lib/kernel/print.o
 	ld -m elf_i386 -Ttext 0xc0001500 -e main \
-        -o $@ $(build_dir)/kernel/main.o $(build_dir)/lib/kernel/print.o
+        -o $@ \
+        $(build_dir)/kernel/main.o \
+        $(build_dir)/kernel/interrupt.o \
+        $(build_dir)/kernel/intr_entry_list.o \
+        $(build_dir)/lib/kernel/print.o
 
 bochs/c.img: $(build_dir)/mbr.bin $(build_dir)/loader.bin $(build_dir)/kernel.bin
 	dd if=$(build_dir)/mbr.bin of=$@ bs=512 count=1 conv=notrunc
