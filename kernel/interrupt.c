@@ -75,9 +75,12 @@ static void intr_handler_init(void) {
 }
 
 static void general_intr_handler(uint8_t vec_nr) {
-    put_str("intr_handler:\n");
+    put_str("intr number: ");
+    put_int((uint32_t)vec_nr);
+    put_str("\n");
+    put_str("intr name: ");
     put_str(intr_names[vec_nr]);
-    put_str("\nintr_handler end:\n");
+    put_str("\n");
 }
 
 static void make_idt_desc(struct gate_desc* p_desc, uint8_t attr, intr_handler_addr function) {

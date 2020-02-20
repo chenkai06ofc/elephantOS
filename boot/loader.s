@@ -77,9 +77,6 @@ protected_mode_start:
     mov ax, SELECTOR_VIDEO
     mov gs, ax
 
-    mov byte [gs:160], 'P'
-    mov byte [gs:161], 0xa4
-
     ; ---------- prepare to reload gdt ----------
     sgdt [gdt_ptr]
     mov dword [VIDEO_DESC], DESC_VIR_VIDEO_LOW
@@ -106,9 +103,6 @@ protected_mode_start:
 
     mov ax, SELECTOR_VIDEO
     mov gs, ax
-    
-    mov byte [gs:240], 'Y'
-    mov byte [gs:241], 0xa4
 
 enter_kernel:
     call kernel_init

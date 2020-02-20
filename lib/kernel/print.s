@@ -19,6 +19,10 @@ CHAR_SPACE_WITH_ATTR equ (CHAR_ATTR<<8) + ASCII_SPACE
 [bits 32]
 section .text
 global put_char
+global put_str
+global put_int
+
+; -------------------- function put_char --------------------
 put_char:
     pushad ; back all registers
     mov ax, SELECTOR_VIDEO
@@ -88,7 +92,6 @@ put_char:
     ret ; end function call
 
 
-
 ; function: set cursor location to bx
 ; arguments
 ;   bx: new cursor location
@@ -130,7 +133,8 @@ put_char:
     loop .clear_last_row
     ret
 
-global put_str
+; -------------------- function put_str --------------------
+; print a char sequence end with 0
 put_str:
     push ebx
     push ecx
@@ -148,4 +152,38 @@ put_str:
 .end_put_char:
     pop ecx
     pop ebx
+    ret
+
+; -------------------- function put_int --------------------
+section .data
+put_int_buffer db 0,0,0,0,0,0,0,0,0 ; 9 bytes buffer
+section .text
+put_int:
+    pushad
+    mov ebp, esp
+    mov eax, [ebp + 4*9]
+
+    mov ecx, 8
+    mov edi, 7
+.copy_to_buffer:
+    mov edx, eax
+    and edx, 0x0000000f
+    cmp dl, 10
+    jc .less_than_10
+    add dl, 0x37
+    jmp .single_copy_to_buffer
+.less_than_10:
+    add dl, 0x30
+.single_copy_to_buffer:
+    mov [put_int_buffer + edi], dl
+    dec edi
+    shr eax, 4
+    loop .copy_to_buffer
+
+    push put_int_buffer
+    call put_str
+    add esp, 4
+
+    mov esp, ebp
+    popad
     ret
