@@ -1,56 +1,54 @@
-build_dir = build
+BUILD_DIR = ./build
+OBJS = $(BUILD_DIR)/kernel/main.o \
+	$(BUILD_DIR)/kernel/interrupt.o \
+	$(BUILD_DIR)/kernel/intr_entry_list.o \
+	$(BUILD_DIR)/device/timer.o \
+	$(BUILD_DIR)/lib/kernel/print.o \
+	$(BUILD_DIR)/lib/string.o
 
 all: bochs/c.img
 
 clean:
-	rm -rf $(build_dir)
+	rm -rf $(BUILD_DIR)
 
-$(build_dir)/mbr.bin: $(build_dir) boot/mbr.s
+$(BUILD_DIR)/mbr.bin: $(BUILD_DIR) boot/mbr.s
 	nasm -I boot/include/ -o $@ boot/mbr.s
 
-$(build_dir)/loader.bin: $(build_dir) boot/loader.s
+$(BUILD_DIR)/loader.bin: $(BUILD_DIR) boot/loader.s
 	nasm -I boot/include/ -o $@ boot/loader.s
 
-$(build_dir)/lib/kernel/print.o: $(build_dir) lib/kernel/print.s
+$(BUILD_DIR)/lib/kernel/print.o: $(BUILD_DIR) lib/kernel/print.s
 	nasm -f elf -o $@ lib/kernel/print.s
 
+$(BUILD_DIR)/lib/string.o: $(BUILD_DIR) lib/string.c
+	gcc -m32 -c -I lib/ -o $@ lib/string.c
+
 # kernel modules
-$(build_dir)/kernel/intr_entry_list.o: $(build_dir) kernel/intr_entry_list.s
+$(BUILD_DIR)/kernel/intr_entry_list.o: $(BUILD_DIR) kernel/intr_entry_list.s
 	nasm -f elf -o $@ kernel/intr_entry_list.s
 
-$(build_dir)/kernel/interrupt.o: $(build_dir) kernel/interrupt.c
+$(BUILD_DIR)/kernel/interrupt.o: $(BUILD_DIR) kernel/interrupt.c
 	gcc -m32 -c -fno-stack-protector -I lib/ -I lib/kernel/ -o $@ kernel/interrupt.c
 
 # device modules
-$(build_dir)/device/timer.o: $(build_dir) device/timer.c
+$(BUILD_DIR)/device/timer.o: $(BUILD_DIR) device/timer.c
 	gcc -m32 -c -I lib/ -I lib/kernel/ -o $@ device/timer.c
 
 # main
-$(build_dir)/kernel/main.o: $(build_dir) kernel/main.c
+$(BUILD_DIR)/kernel/main.o: $(BUILD_DIR) kernel/main.c
 	gcc -m32 -c -I device/ -I lib/kernel/ -o $@ kernel/main.c
 
-$(build_dir)/kernel.bin: $(build_dir) \
-		$(build_dir)/kernel/main.o \
-		$(build_dir)/kernel/interrupt.o \
-		$(build_dir)/kernel/intr_entry_list.o \
-		$(build_dir)/device/timer.o \
-		$(build_dir)/lib/kernel/print.o
-	ld -m elf_i386 -Ttext 0xc0001500 -e main \
-        -o $@ \
-        $(build_dir)/kernel/main.o \
-        $(build_dir)/kernel/interrupt.o \
-        $(build_dir)/kernel/intr_entry_list.o \
-        $(build_dir)/device/timer.o \
-        $(build_dir)/lib/kernel/print.o
+$(BUILD_DIR)/kernel.bin: $(OBJS)
+	ld -m elf_i386 -Ttext 0xc0001500 -e main -o $@ $(OBJS)
 
-bochs/c.img: $(build_dir)/mbr.bin $(build_dir)/loader.bin $(build_dir)/kernel.bin
-	dd if=$(build_dir)/mbr.bin of=$@ bs=512 count=1 conv=notrunc
-	dd if=$(build_dir)/loader.bin of=$@ bs=512 count=4 seek=1 conv=notrunc
-	dd if=$(build_dir)/kernel.bin of=$@ bs=512 count=200 seek=9 conv=notrunc
+bochs/c.img: $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.bin
+	dd if=$(BUILD_DIR)/mbr.bin of=$@ bs=512 count=1 conv=notrunc
+	dd if=$(BUILD_DIR)/loader.bin of=$@ bs=512 count=4 seek=1 conv=notrunc
+	dd if=$(BUILD_DIR)/kernel.bin of=$@ bs=512 count=200 seek=9 conv=notrunc
 
-$(build_dir):
-	mkdir -p $(build_dir)/kernel
-	mkdir -p $(build_dir)/device
-	mkdir -p $(build_dir)/lib/kernel
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)/kernel
+	mkdir -p $(BUILD_DIR)/device
+	mkdir -p $(BUILD_DIR)/lib/kernel
 
 .PHONY: all clean
