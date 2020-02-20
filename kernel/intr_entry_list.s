@@ -3,6 +3,7 @@
 %define NO_ERROR_CODE push 0
 
 extern put_str
+extern intr_handler_list
 
 section .data
 intr_msg db "interrupt occur!", 0xa, 0
@@ -14,14 +15,26 @@ intr_entry_list:
 section .text
 intr%1entry:
     %2
-    push intr_msg
-    call put_str
-    add esp, 4
+    push ds
+    push es
+    push gs
+    push fs
+    pushad
 
     ; send EOI to PIC
     mov al, 0x20
     out 0xa0, al
     out 0x20, al
+
+    push %1
+    call [intr_handler_list + %1*4]
+    add esp, 4
+
+    popad
+    pop fs
+    pop gs
+    pop es
+    pop ds
 
     add esp, 4 ; skip error_code
     iret
