@@ -12,9 +12,9 @@ int bitmap_test(struct bitmap* btmp, uint32_t bit_idx) {
     return btmp->bits[byte_idx] & (1 << bit_idx_in_byte);
 }
 
-int bitmap_scan(struct bitmap* btmp, uint32_t cnt) {
-    int start_zero_idx = -1;
-    int cur_idx = 0;
+uint32_t bitmap_scan(struct bitmap* btmp, uint32_t cnt) {
+    uint32_t start_zero_idx = -1;
+    uint32_t cur_idx = 0;
 
     while(cur_idx / 8 < btmp ->len_in_bytes) {
         int8_t cur_byte = btmp->bits[cur_idx / 8];
@@ -39,7 +39,6 @@ int bitmap_scan(struct bitmap* btmp, uint32_t cnt) {
                 cur_idx++;
             }
         }
-
     }
     return -1;
 }

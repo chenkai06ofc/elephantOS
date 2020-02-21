@@ -106,6 +106,7 @@ protected_mode_start:
 
 enter_kernel:
     call kernel_init
+    mov esp, KERNEL_STACK_TOP
     jmp KERNEL_ENTRY_POINT
 
     jmp $
