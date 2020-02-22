@@ -18,4 +18,5 @@ struct vaddr_pool {
     uint32_t vaddr_start;
 };
 
+void mem_init();
 #endif //__KERNEL_MEMORY_H

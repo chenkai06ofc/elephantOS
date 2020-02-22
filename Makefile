@@ -2,6 +2,7 @@ BUILD_DIR = ./build
 OBJS = $(BUILD_DIR)/kernel/main.o \
 	$(BUILD_DIR)/kernel/interrupt.o \
 	$(BUILD_DIR)/kernel/bitmap.o \
+	$(BUILD_DIR)/kernel/memory.o \
 	$(BUILD_DIR)/kernel/intr_entry_list.o \
 	$(BUILD_DIR)/device/timer.o \
 	$(BUILD_DIR)/lib/kernel/print.o \
@@ -35,6 +36,9 @@ $(BUILD_DIR)/kernel/interrupt.o: $(BUILD_DIR) kernel/interrupt.c
 
 $(BUILD_DIR)/kernel/bitmap.o: $(BUILD_DIR) kernel/bitmap.c
 	gcc -m32 -c $(CFLAGS) $(LIBS) -o $@ kernel/bitmap.c
+
+$(BUILD_DIR)/kernel/memory.o: $(BUILD_DIR) kernel/memory.c
+	gcc -m32 -c $(CFLAGS) $(LIBS) -o $@ kernel/memory.c
 
 # device modules
 $(BUILD_DIR)/device/timer.o: $(BUILD_DIR) device/timer.c

@@ -29,6 +29,13 @@ loader_start:
     ; ---------- clear screen ----------
     call clear_screen
 
+    ; ---------- get memory volume ----------
+    mov eax, 0x88
+    int 0x15
+    add ax, 0x400 ; the return volume doesn't include the low 1mb
+    shl eax, 10
+    mov [0x800], eax
+
     ; ---------- print message ----------
     mov ax, msg
     mov cx, [msg_len]
