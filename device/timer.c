@@ -1,7 +1,7 @@
 #include "timer.h"
-#include "io.h"
-#include "print.h"
-#include "stdint.h"
+#include "../lib/stdint.h"
+#include "../lib/kernel/io.h"
+#include "../lib/kernel/print.h"
 
 #define IRQ0_FREQUENCY      10
 #define INPUT_FREQUENCY     1193180

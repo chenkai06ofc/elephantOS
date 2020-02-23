@@ -1,7 +1,7 @@
-#include "print.h"
 #include "interrupt.h"
-#include "timer.h"
 #include "memory.h"
+#include "../lib/kernel/print.h"
+#include "../device/timer.h"
 
 int main(void) {
     put_str("hello world...\n");

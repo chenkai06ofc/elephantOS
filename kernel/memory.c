@@ -1,9 +1,9 @@
 #include "memory.h"
-#include "stdint.h"
 #include "bitmap.h"
 #include "global.h"
-#include "print.h"
-#include "string.h"
+#include "../lib/stdint.h"
+#include "../lib/string.h"
+#include "../lib/kernel/print.h"
 
 #define PG_SIZE 0x1000 // 4096
 

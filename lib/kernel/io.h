@@ -1,6 +1,6 @@
 #ifndef __LIB_IO_H
 #define __LIB_IO_H
-#include "stdint.h"
+#include "../stdint.h"
 
 /** output 1 byte into port */
 static inline void outb(uint16_t port, uint8_t data) {

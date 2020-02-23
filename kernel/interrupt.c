@@ -1,8 +1,8 @@
 #include "interrupt.h"
-#include "stdint.h"
 #include "global.h"
-#include "print.h"
-#include "io.h"
+#include "../lib/stdint.h"
+#include "../lib/kernel/print.h"
+#include "../lib/kernel/io.h"
 
 #define PIC_M_CTRL_PORT 0x20
 #define PIC_M_DATA_PORT 0x21

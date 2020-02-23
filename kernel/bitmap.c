@@ -1,6 +1,6 @@
 #include "bitmap.h"
-#include "stdint.h"
-#include "string.h"
+#include "../lib/stdint.h"
+#include "../lib/string.h"
 
 void bitmap_init(struct bitmap* btmp) {
     memset(btmp->bits, 0, btmp->len_in_bytes);

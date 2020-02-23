@@ -7,7 +7,6 @@ OBJS = $(BUILD_DIR)/kernel/main.o \
 	$(BUILD_DIR)/device/timer.o \
 	$(BUILD_DIR)/lib/kernel/print.o \
 	$(BUILD_DIR)/lib/string.o
-LIBS = -I lib/ -I lib/kernel/ -I kernel/ -I device/
 CFLAGS = -fno-builtin -Og
 
 all: bochs/c.img
@@ -25,28 +24,28 @@ $(BUILD_DIR)/lib/kernel/print.o: $(BUILD_DIR) lib/kernel/print.s
 	nasm -f elf -o $@ lib/kernel/print.s
 
 $(BUILD_DIR)/lib/string.o: $(BUILD_DIR) lib/string.c
-	gcc -m32 -c $(CFLAGS) $(LIBS) -o $@ lib/string.c
+	gcc -m32 -c $(CFLAGS) -o $@ lib/string.c
 
 # kernel modules
 $(BUILD_DIR)/kernel/intr_entry_list.o: $(BUILD_DIR) kernel/intr_entry_list.s
 	nasm -f elf -o $@ kernel/intr_entry_list.s
 
 $(BUILD_DIR)/kernel/interrupt.o: $(BUILD_DIR) kernel/interrupt.c
-	gcc -m32 -c -fno-stack-protector $(CFLAGS) $(LIBS) -o $@ kernel/interrupt.c
+	gcc -m32 -c -fno-stack-protector $(CFLAGS) -o $@ kernel/interrupt.c
 
 $(BUILD_DIR)/kernel/bitmap.o: $(BUILD_DIR) kernel/bitmap.c
-	gcc -m32 -c $(CFLAGS) $(LIBS) -o $@ kernel/bitmap.c
+	gcc -m32 -c $(CFLAGS) -o $@ kernel/bitmap.c
 
 $(BUILD_DIR)/kernel/memory.o: $(BUILD_DIR) kernel/memory.c
-	gcc -m32 -c $(CFLAGS) $(LIBS) -o $@ kernel/memory.c
+	gcc -m32 -c $(CFLAGS) -o $@ kernel/memory.c
 
 # device modules
 $(BUILD_DIR)/device/timer.o: $(BUILD_DIR) device/timer.c
-	gcc -m32 -c $(CFLAGS) $(LIBS) -o $@ device/timer.c
+	gcc -m32 -c $(CFLAGS) -o $@ device/timer.c
 
 # main
 $(BUILD_DIR)/kernel/main.o: $(BUILD_DIR) kernel/main.c
-	gcc -m32 -c $(CFLAGS) $(LIBS) -o $@ kernel/main.c
+	gcc -m32 -c $(CFLAGS) -o $@ kernel/main.c
 
 $(BUILD_DIR)/kernel.bin: $(OBJS)
 	ld -m elf_i386 -Ttext 0xc0001500 -e main -o $@ $(OBJS)
