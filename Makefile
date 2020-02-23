@@ -8,7 +8,7 @@ OBJS = $(BUILD_DIR)/kernel/main.o \
 	$(BUILD_DIR)/lib/kernel/print.o \
 	$(BUILD_DIR)/lib/string.o
 LIBS = -I lib/ -I lib/kernel/ -I kernel/ -I device/
-CFLAGS = -fno-builtin
+CFLAGS = -fno-builtin -Og
 
 all: bochs/c.img
 
@@ -25,7 +25,7 @@ $(BUILD_DIR)/lib/kernel/print.o: $(BUILD_DIR) lib/kernel/print.s
 	nasm -f elf -o $@ lib/kernel/print.s
 
 $(BUILD_DIR)/lib/string.o: $(BUILD_DIR) lib/string.c
-	gcc -m32 -c $(CFLAGS) $(LIBS) $(CFLAGS) -o $@ lib/string.c
+	gcc -m32 -c $(CFLAGS) $(LIBS) -o $@ lib/string.c
 
 # kernel modules
 $(BUILD_DIR)/kernel/intr_entry_list.o: $(BUILD_DIR) kernel/intr_entry_list.s

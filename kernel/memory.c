@@ -3,6 +3,7 @@
 #include "bitmap.h"
 #include "global.h"
 #include "print.h"
+#include "string.h"
 
 #define PG_SIZE 0x1000 // 4096
 
@@ -21,16 +22,12 @@ struct paddr_pool {
 struct paddr_pool p_kernel_pool, p_user_pool;
 struct vaddr_pool v_kernel_pool;
 
-static void mem_pool_init();
+static void* vaddr_get(enum pool_flag pf, uint32_t cnt);
+static void* palloc(struct paddr_pool* pool_ptr);
+static void map_vaddr_paddr(uint32_t vaddr, uint32_t paddr);
 
 void mem_init() {
     put_str("mem_init start\n");
-    mem_pool_init();
-    put_str("mem_init done\n");
-}
-
-static void mem_pool_init() {
-    put_str("mem_pool_init start\n");
     uint32_t total_mem_bytes = *((uint32_t*)0x800);
     put_str("total mem of machine: ");
     put_int(total_mem_bytes);
@@ -75,16 +72,39 @@ static void mem_pool_init() {
     // clear bitmap
     bitmap_init(&p_kernel_pool.bitmap);
     bitmap_init(&p_user_pool.bitmap);
-    
+
     /* init virtual kernel pool */
     v_kernel_pool.bitmap.len_in_bytes = kernel_bitmap_len;
     v_kernel_pool.bitmap.bits = (void*) (MEM_BITMAP_BASE + kernel_bitmap_len + user_bitmap_len);
     v_kernel_pool.vaddr_start = KERNEL_HEAP_START;
     bitmap_init(&v_kernel_pool.bitmap);
 
-    put_str("mem_pool_init done\n");
+    put_str("mem_init done\n");
 }
 
+/** allocate cnt virtual pages, return start vaddr if succeed, return NULL if failed */
+void* malloc_page(enum pool_flag pf, uint32_t cnt) {
+    void* vaddr = vaddr_get(pf, cnt);
+    if (vaddr == NULL) {
+        return NULL;
+    }
+    uint32_t vaddr_scalar = (uint32_t) vaddr;
+    struct paddr_pool* pool_ptr = (pf == PF_KERNEL) ? &p_kernel_pool : &p_user_pool;
+    for (int i = 0; i < cnt; i++) {
+        void* p_addr = palloc(pool_ptr);
+        map_vaddr_paddr(vaddr_scalar, (uint32_t) p_addr);
+        vaddr_scalar += PG_SIZE;
+    }
+    return vaddr;
+}
+
+void* get_kernel_pages(uint32_t cnt) {
+    void* vaddr = malloc_page(PF_KERNEL, cnt);
+    if (vaddr != NULL) {
+        memset(vaddr, 0, cnt * PG_SIZE);
+    }
+    return vaddr;
+}
 
 /** allocate cnt virtual pages from virtual memory pool identified by pf */
 static void* vaddr_get(enum pool_flag pf, uint32_t cnt) {
@@ -105,12 +125,12 @@ static void* vaddr_get(enum pool_flag pf, uint32_t cnt) {
 }
 
 /** get pte pointer of vaddr */
-uint32_t* pte_ptr(uint32_t vaddr) {
+uint32_t* get_pte_ptr(uint32_t vaddr) {
     return (uint32_t*)(0xffc00000 | ((vaddr & 0xffc00000) >> 10) | ((vaddr & 0x003ff000) >> 10));
 }
 
 /** get pde pointer of vaddr */
-uint32_t* pde_ptr(uint32_t vaddr) {
+uint32_t* get_pde_ptr(uint32_t vaddr) {
     return (uint32_t*)(0xfffff000 | (PDE_IDX(vaddr) * 4));
 }
 
@@ -123,4 +143,17 @@ static void* palloc(struct paddr_pool* pool_ptr) {
         bitmap_set(&pool_ptr->bitmap, start_idx, 1);
         return (void*)(pool_ptr->paddr_start + start_idx * PG_SIZE);
     }
+}
+
+static void map_vaddr_paddr(uint32_t vaddr, uint32_t paddr) {
+    uint32_t* pde_ptr = get_pde_ptr(vaddr);
+    uint32_t* pte_ptr = get_pte_ptr(vaddr);
+    // PDE not present
+    if ((*pde_ptr) & PG_P_1) {
+        uint32_t pt_page_paddr = (uint32_t)palloc(&p_kernel_pool);
+        *pde_ptr = pt_page_paddr | PG_US_U | PG_RW_W | PG_P_1;
+        // pt_page_paddr is physical address, cannot be used directly
+        memset((void*)((uint32_t)pte_ptr & 0xfffff000), 0, PG_SIZE);
+    }
+    *pte_ptr = paddr | PG_US_U | PG_RW_W | PG_P_1;
 }

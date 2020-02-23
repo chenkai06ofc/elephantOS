@@ -19,4 +19,5 @@ struct vaddr_pool {
 };
 
 void mem_init();
+void* get_kernel_pages(uint32_t cnt);
 #endif //__KERNEL_MEMORY_H
