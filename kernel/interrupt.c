@@ -25,7 +25,6 @@ static void intr_handler_init(void);
 static void general_intr_handler(uint8_t vec_nr);
 
 static struct gate_desc idt[IDT_DESC_CNT]; // IDT table
-
 static char* intr_names[IDT_DESC_CNT];
 intr_handler_addr intr_handler_list[IDT_DESC_CNT];
 
@@ -40,6 +39,28 @@ void idt_init(void) {
     uint64_t idt_setting = (((uint64_t)(uint32_t)idt) << 16) + sizeof(idt) -1;
     // this code will generate __stack_chk_fail_local symbol in interrupt.o
     asm volatile ("lidt %0" : : "m" (idt_setting));
+}
+
+enum intr_status get_intr_status(void) {
+    uint32_t eflags = 0;
+    asm volatile ("pushfl; popl %0" : "=g"(eflags));
+    return (eflags & 0x00000200) ? INTR_ON : INTR_OFF;
+}
+
+enum intr_status intr_enable(void) {
+    enum intr_status old_status = get_intr_status();
+    if (old_status == INTR_OFF) {
+        asm volatile ("sti");
+    }
+    return old_status;
+}
+
+enum intr_status intr_disable(void) {
+    enum intr_status old_status = get_intr_status();
+    if (old_status == INTR_ON) {
+        asm volatile ("cli");
+    }
+    return old_status;
 }
 
 static void intr_handler_init(void) {
