@@ -1,6 +1,7 @@
 BUILD_DIR = ./build
 OBJS = $(BUILD_DIR)/kernel/main.o \
 	$(BUILD_DIR)/kernel/interrupt.o \
+	$(BUILD_DIR)/kernel/debug.o \
 	$(BUILD_DIR)/kernel/bitmap.o \
 	$(BUILD_DIR)/kernel/memory.o \
 	$(BUILD_DIR)/kernel/intr_entry_list.o \
@@ -32,6 +33,9 @@ $(BUILD_DIR)/kernel/intr_entry_list.o: $(BUILD_DIR) kernel/intr_entry_list.s
 
 $(BUILD_DIR)/kernel/interrupt.o: $(BUILD_DIR) kernel/interrupt.c
 	gcc -m32 -c -fno-stack-protector $(CFLAGS) -o $@ kernel/interrupt.c
+
+$(BUILD_DIR)/kernel/debug.o: $(BUILD_DIR) kernel/debug.c
+	gcc -m32 -c $(CFLAGS) -o $@ kernel/debug.c
 
 $(BUILD_DIR)/kernel/bitmap.o: $(BUILD_DIR) kernel/bitmap.c
 	gcc -m32 -c $(CFLAGS) -o $@ kernel/bitmap.c

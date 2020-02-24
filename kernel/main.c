@@ -1,5 +1,6 @@
 #include "interrupt.h"
 #include "memory.h"
+#include "debug.h"
 #include "../lib/kernel/print.h"
 #include "../device/timer.h"
 
@@ -9,6 +10,8 @@ int main(void) {
     mem_init();
     idt_init();
     //asm volatile("sti");
+    int a = 2;
+    ASSERT(a == 0);
 
     void* addr = get_kernel_pages(3);
     put_str("mem allocated: ");
