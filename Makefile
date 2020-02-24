@@ -6,6 +6,7 @@ OBJS = $(BUILD_DIR)/kernel/main.o \
 	$(BUILD_DIR)/kernel/memory.o \
 	$(BUILD_DIR)/kernel/intr_entry_list.o \
 	$(BUILD_DIR)/device/timer.o \
+	$(BUILD_DIR)/thread/thread.o \
 	$(BUILD_DIR)/lib/kernel/print.o \
 	$(BUILD_DIR)/lib/string.o
 CFLAGS = -fno-builtin -Og
@@ -47,6 +48,9 @@ $(BUILD_DIR)/kernel/memory.o: $(BUILD_DIR) kernel/memory.c
 $(BUILD_DIR)/device/timer.o: $(BUILD_DIR) device/timer.c
 	gcc -m32 -c $(CFLAGS) -o $@ device/timer.c
 
+$(BUILD_DIR)/thread/thread.o: $(BUILD_DIR) thread/thread.c
+	gcc -m32 -c $(CFLAGS) -o $@ thread/thread.c
+
 # main
 $(BUILD_DIR)/kernel/main.o: $(BUILD_DIR) kernel/main.c
 	gcc -m32 -c $(CFLAGS) -o $@ kernel/main.c
@@ -62,6 +66,7 @@ bochs/c.img: $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.bi
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)/kernel
 	mkdir -p $(BUILD_DIR)/device
+	mkdir -p $(BUILD_DIR)/thread
 	mkdir -p $(BUILD_DIR)/lib/kernel
 
 .PHONY: all clean

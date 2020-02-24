@@ -3,6 +3,14 @@
 #include "debug.h"
 #include "../lib/kernel/print.h"
 #include "../device/timer.h"
+#include "../thread/thread.h"
+
+void test_thread_func(void* arg) {
+    char* p = arg;
+    while (1) {
+        put_str("test message");put_str("\n");
+    }
+}
 
 int main(void) {
     put_str("hello world...\n");
@@ -10,10 +18,8 @@ int main(void) {
     mem_init();
     idt_init();
     //asm volatile("sti");
-    void* addr = get_kernel_pages(3);
-    put_str("mem allocated: ");
-    put_int((uint32_t)addr);
-    put_str("\n");
+
+    thread_start("test_name", 30, test_thread_func, "test message");
 
     while(1);
 }
