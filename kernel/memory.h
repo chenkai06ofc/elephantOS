@@ -18,6 +18,14 @@ struct vaddr_pool {
     uint32_t vaddr_start;
 };
 
+/** physical address pool */
+struct paddr_pool {
+    struct bitmap bitmap;
+    uint32_t paddr_start;
+    uint32_t pool_size;
+};
+
 void mem_init();
 void* get_kernel_pages(uint32_t cnt);
+void* malloc_page(enum pool_flag pf, uint32_t cnt);
 #endif //__KERNEL_MEMORY_H

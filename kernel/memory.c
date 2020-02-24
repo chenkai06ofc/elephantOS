@@ -13,16 +13,10 @@
 #define PDE_IDX(addr)   ((addr & 0xffc00000) >> 22)
 #define PTE_IDX(addr)   ((addr & 0x003ff000) >> 12)
 
-struct paddr_pool {
-    struct bitmap bitmap;
-    uint32_t paddr_start;
-    uint32_t pool_size;
-};
-
 struct paddr_pool p_kernel_pool, p_user_pool;
 struct vaddr_pool v_kernel_pool;
 
-static void* vaddr_get(enum pool_flag pf, uint32_t cnt);
+static void* valloc(enum pool_flag pf, uint32_t cnt);
 static void* palloc(struct paddr_pool* pool_ptr);
 static void map_vaddr_paddr(uint32_t vaddr, uint32_t paddr);
 
@@ -84,7 +78,7 @@ void mem_init() {
 
 /** allocate cnt virtual pages, return start vaddr if succeed, return NULL if failed */
 void* malloc_page(enum pool_flag pf, uint32_t cnt) {
-    void* vaddr = vaddr_get(pf, cnt);
+    void* vaddr = valloc(pf, cnt);
     if (vaddr == NULL) {
         return NULL;
     }
@@ -106,8 +100,8 @@ void* get_kernel_pages(uint32_t cnt) {
     return vaddr;
 }
 
-/** allocate cnt virtual pages from virtual memory pool identified by pf */
-static void* vaddr_get(enum pool_flag pf, uint32_t cnt) {
+/** allocate cnt pages from virtual memory pool identified by pf */
+static void* valloc(enum pool_flag pf, uint32_t cnt) {
     if (pf == PF_KERNEL) {
         uint32_t start_idx = bitmap_scan(&v_kernel_pool.bitmap, cnt);
         if (start_idx == -1) {
@@ -124,16 +118,6 @@ static void* vaddr_get(enum pool_flag pf, uint32_t cnt) {
     }
 }
 
-/** get pte pointer of vaddr */
-uint32_t* get_pte_ptr(uint32_t vaddr) {
-    return (uint32_t*)(0xffc00000 | ((vaddr & 0xffc00000) >> 10) | ((vaddr & 0x003ff000) >> 10));
-}
-
-/** get pde pointer of vaddr */
-uint32_t* get_pde_ptr(uint32_t vaddr) {
-    return (uint32_t*)(0xfffff000 | (PDE_IDX(vaddr) * 4));
-}
-
 /** allocate 1 page from physical memory pool pool_ptr */
 static void* palloc(struct paddr_pool* pool_ptr) {
     uint32_t start_idx = bitmap_scan(&pool_ptr->bitmap, 1);
@@ -145,11 +129,21 @@ static void* palloc(struct paddr_pool* pool_ptr) {
     }
 }
 
+/** get pte pointer of vaddr */
+uint32_t* get_pte_ptr(uint32_t vaddr) {
+    return (uint32_t*)(0xffc00000 | ((vaddr & 0xffc00000) >> 10) | ((vaddr & 0x003ff000) >> 10));
+}
+
+/** get pde pointer of vaddr */
+uint32_t* get_pde_ptr(uint32_t vaddr) {
+    return (uint32_t*)(0xfffff000 | (PDE_IDX(vaddr) * 4));
+}
+
 static void map_vaddr_paddr(uint32_t vaddr, uint32_t paddr) {
     uint32_t* pde_ptr = get_pde_ptr(vaddr);
     uint32_t* pte_ptr = get_pte_ptr(vaddr);
     // PDE not present
-    if ((*pde_ptr) & PG_P_1) {
+    if (!(*pde_ptr) & PG_P_1) {
         uint32_t pt_page_paddr = (uint32_t)palloc(&p_kernel_pool);
         *pde_ptr = pt_page_paddr | PG_US_U | PG_RW_W | PG_P_1;
         // pt_page_paddr is physical address, cannot be used directly

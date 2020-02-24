@@ -10,9 +10,6 @@ int main(void) {
     mem_init();
     idt_init();
     //asm volatile("sti");
-    int a = 2;
-    ASSERT(a == 0);
-
     void* addr = get_kernel_pages(3);
     put_str("mem allocated: ");
     put_int((uint32_t)addr);
