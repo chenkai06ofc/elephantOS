@@ -8,7 +8,7 @@
 void test_thread_func(void* arg) {
     char* p = arg;
     while (1) {
-        put_str("test message");put_str("\n");
+        put_str(p);put_str("\n");
     }
 }
 
@@ -19,7 +19,7 @@ int main(void) {
     idt_init();
     //asm volatile("sti");
 
-    thread_start("test_name", 30, test_thread_func, "test message");
+    thread_start("test_name", 30, test_thread_func, "test msg");
 
     while(1);
 }

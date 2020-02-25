@@ -5,7 +5,7 @@
 
 #define PG_SIZE     0x1000
 
-static void kernel_thread(thread_func* function, void* func_arg) {
+static void kernel_thread(thread_func function, void* func_arg) {
     function(func_arg);
 }
 

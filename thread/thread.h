@@ -2,7 +2,7 @@
 #define __THREAD_THREAD_H
 #include "../lib/stdint.h"
 
-typedef void thread_func(void*);
+typedef void (*thread_func)(void*);
 
 struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg);
 
@@ -40,10 +40,10 @@ struct thread_stack {
     uint32_t ebx;
     uint32_t edi;
     uint32_t esi;
-    void (*eip) (thread_func* func, void* func_arg);
+    void (*eip) (thread_func func, void* func_arg);
     // ret addr is just a placeholder to use ret to call function
     void (*unused_retaddr);
-    thread_func* function;
+    thread_func function;
     void* func_arg;
 };
 

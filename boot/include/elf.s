@@ -1,5 +1,6 @@
 PT_NULL             equ 0
 ; ---------- elf header ----------
+E_ENTRY_OFFSET      equ 24
 E_PHOFF_OFFSET      equ 28
 E_PHENTSIZE_OFFSET  equ 42
 E_PHNUM_OFFSET      equ 44

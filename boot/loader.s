@@ -114,7 +114,7 @@ protected_mode_start:
 enter_kernel:
     call kernel_init
     mov esp, KERNEL_STACK_TOP
-    jmp KERNEL_ENTRY_POINT
+    jmp eax
 
     jmp $
 
@@ -161,6 +161,8 @@ setup_page:
     ret
 
 ; -------------------- function kernel_init --------------------
+; return value
+;   eax: kernel entry point
 kernel_init:
     xor ecx, ecx
     xor edx, edx
@@ -184,6 +186,7 @@ kernel_init:
 .if_pt_null:
     add ebx, edx
     loop .each_segment
+    mov eax, [KERNEL_BIN_ADDR + E_ENTRY_OFFSET] ; eax is e_entry
     ret
 
 ; -------------------- function mem_cpy --------------------
