@@ -1,6 +1,7 @@
 #ifndef __THREAD_THREAD_H
 #define __THREAD_THREAD_H
 #include "../lib/stdint.h"
+#include "../lib/kernel/list.h"
 
 typedef void (*thread_func)(void*);
 
@@ -51,13 +52,16 @@ struct thread_stack {
 struct task_struct {
     uint32_t* kstack;
     enum task_status status;
-    uint8_t prio;
     char name[16];
+    uint8_t prio;
+    uint8_t ticks;
+    uint32_t elapsed_ticks;
+
+    struct list_node status_list_tag;
+    struct list_node all_list_tag;
+
+    uint32_t* pgdir;
     uint32_t stack_magic;
 };
-
-
-
-
 
 #endif //__THREAD_THREAD_H
