@@ -17,6 +17,7 @@ int main(void) {
     idt_init();
     mem_init();
     timer_init();
+    thread_init()
     intr_enable();
 
 //    thread_start("test1", 30, test_thread_func, "aaaaaaaa");

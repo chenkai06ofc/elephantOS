@@ -5,6 +5,7 @@
 
 typedef void (*thread_func)(void*);
 
+void thread_init(void);
 struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg);
 struct task_struct* current_thread();
 void schedule(void);
@@ -25,8 +26,8 @@ struct intr_stack {
     uint32_t edx;
     uint32_t ecx;
     uint32_t eax;
-    uint32_t gs;
     uint32_t fs;
+    uint32_t gs;
     uint32_t es;
     uint32_t ds;
     // values below will be saved to stack automatically when interrupt happens

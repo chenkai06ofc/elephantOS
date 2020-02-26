@@ -4,6 +4,7 @@
 #include "../kernel/interrupt.h"
 #include "../lib/stdint.h"
 #include "../lib/string.h"
+#include "../lib/kernel/print.h"
 #include "../lib/kernel/list.h"
 
 #define PG_SIZE     0x1000
@@ -13,6 +14,16 @@ struct list_node ready_list_head;
 struct list_node all_list_head;
 
 extern void switch_to(struct task_struct* current, struct task_struct* next);
+
+static void make_main_thread(void);
+
+void thread_init(void) {
+    put_str("thread_init start\n");
+    list_init(&ready_list_head);
+    list_init(&all_list_head);
+    make_main_thread();
+    put_str("thread_init done\n");
+}
 
 struct task_struct* current_thread() {
     uint32_t esp;
