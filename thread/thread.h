@@ -6,6 +6,8 @@
 typedef void (*thread_func)(void*);
 
 struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg);
+struct task_struct* current_thread();
+void schedule(void);
 
 enum task_status {
     TASK_RUNNING,

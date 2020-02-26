@@ -21,4 +21,7 @@ void list_append(struct list_node* head, struct list_node* node);
 void list_remove(struct list_node* node);
 struct list_node* list_pop(struct list_node* head);
 
+#define list_entry(struct_type_name, field_name, field_ptr) \
+    (struct_type_name*) ((uint32_t)field_ptr - (uint32_t)(&((struct_type_name*)0)->field_name))
+
 #endif //__LIB_KERNEL_LIST_H

@@ -17,9 +17,11 @@ int main(void) {
     idt_init();
     mem_init();
     timer_init();
-    asm volatile("sti");
+    intr_enable();
 
-    //thread_start("test_name", 30, test_thread_func, "test msg");
+//    thread_start("test1", 30, test_thread_func, "aaaaaaaa");
+//    thread_start("test2", 30, test_thread_func, "11111111");
+//    thread_start("test3", 30, test_thread_func, "bbbbbbbb");
+
     while(1);
 }
-

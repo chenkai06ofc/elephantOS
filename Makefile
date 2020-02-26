@@ -7,6 +7,7 @@ OBJS = $(BUILD_DIR)/kernel/main.o \
 	$(BUILD_DIR)/kernel/intr_entry_list.o \
 	$(BUILD_DIR)/device/timer.o \
 	$(BUILD_DIR)/thread/thread.o \
+	$(BUILD_DIR)/thread/switch.o \
 	$(BUILD_DIR)/lib/kernel/print.o \
 	$(BUILD_DIR)/lib/kernel/list.o \
 	$(BUILD_DIR)/lib/string.o
@@ -25,6 +26,9 @@ $(BUILD_DIR)/loader.bin: $(BUILD_DIR) boot/loader.s
 
 $(BUILD_DIR)/lib/kernel/print.o: $(BUILD_DIR) lib/kernel/print.s
 	nasm -f elf -o $@ lib/kernel/print.s
+
+$(BUILD_DIR)/thread/switch.o: $(BUILD_DIR) thread/switch.s
+	nasm -f elf -o $@ thread/switch.s
 
 $(BUILD_DIR)/lib/kernel/list.o: $(BUILD_DIR) lib/kernel/list.c
 	gcc -m32 -c $(CFLAGS) -o $@ lib/kernel/list.c

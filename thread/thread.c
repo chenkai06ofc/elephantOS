@@ -63,9 +63,18 @@ struct task_struct* thread_start(char* name, int prio, thread_func function, voi
     return thread;
 }
 
-
 static void make_main_thread(void) {
     main_thread = current_thread();
     init_thread(main_thread, "main", 31);
     list_append(&all_list_head, &main_thread->all_list_tag);
+}
+
+void schedule(void) {
+    struct task_struct* current = current_thread();
+    current->status = TASK_READY;
+    current->ticks = current->prio;
+    list_append(&ready_list_head, &current->status_list_tag);
+    struct task_struct* next = list_entry(struct task_struct, status_list_tag, list_pop(&ready_list_head));
+    next->status = TASK_RUNNING;
+    switch_to(current, next);
 }
