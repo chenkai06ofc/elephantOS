@@ -8,6 +8,7 @@ OBJS = $(BUILD_DIR)/kernel/main.o \
 	$(BUILD_DIR)/device/timer.o \
 	$(BUILD_DIR)/thread/thread.o \
 	$(BUILD_DIR)/lib/kernel/print.o \
+	$(BUILD_DIR)/lib/kernel/list.o \
 	$(BUILD_DIR)/lib/string.o
 CFLAGS = -fno-builtin -Og
 
@@ -24,6 +25,9 @@ $(BUILD_DIR)/loader.bin: $(BUILD_DIR) boot/loader.s
 
 $(BUILD_DIR)/lib/kernel/print.o: $(BUILD_DIR) lib/kernel/print.s
 	nasm -f elf -o $@ lib/kernel/print.s
+
+$(BUILD_DIR)/lib/kernel/list.o: $(BUILD_DIR) lib/kernel/list.c
+	gcc -m32 -c $(CFLAGS) -o $@ lib/kernel/list.c
 
 $(BUILD_DIR)/lib/string.o: $(BUILD_DIR) lib/string.c
 	gcc -m32 -c $(CFLAGS) -o $@ lib/string.c

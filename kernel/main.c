@@ -14,13 +14,12 @@ void test_thread_func(void* arg) {
 
 int main(void) {
     put_str("hello world...\n");
-    timer_init();
-    mem_init();
     idt_init();
-    //asm volatile("sti");
+    mem_init();
+    timer_init();
+    asm volatile("sti");
 
-    thread_start("test_name", 30, test_thread_func, "test msg");
-
+    //thread_start("test_name", 30, test_thread_func, "test msg");
     while(1);
 }
 

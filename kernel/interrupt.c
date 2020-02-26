@@ -41,6 +41,10 @@ void idt_init(void) {
     asm volatile ("lidt %0" : : "m" (idt_setting));
 }
 
+void register_intr_handler(uint8_t vec_no, intr_handler_addr function) {
+    intr_handler_list[vec_no] = function;
+}
+
 enum intr_status get_intr_status(void) {
     uint32_t eflags = 0;
     asm volatile ("pushfl; popl %0" : "=g"(eflags));
