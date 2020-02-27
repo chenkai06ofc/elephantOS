@@ -10,7 +10,7 @@ switch_to:
     mov eax, [esp + 20] ; current
     mov [eax], esp
     mov eax, [esp + 24] ; next
-    mov esp, eax
+    mov esp, [eax]
 
     pop ebp
     pop ebx

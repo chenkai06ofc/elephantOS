@@ -20,6 +20,8 @@ void list_append(struct list_node* head, struct list_node* node);
 
 void list_remove(struct list_node* node);
 struct list_node* list_pop(struct list_node* head);
+/** traverse the list and apply func to all the nodes */
+void list_traverse(struct list_node* head, void (*func)(struct list_node*));
 
 #define list_entry(struct_type_name, field_name, field_ptr) \
     (struct_type_name*) ((uint32_t)field_ptr - (uint32_t)(&((struct_type_name*)0)->field_name))

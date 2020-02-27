@@ -26,9 +26,10 @@ intr%1entry:
     out 0xa0, al
     out 0x20, al
 
+    push esp
     push %1
     call [intr_handler_list + %1*4]
-    add esp, 4
+    add esp, 8
 
     popad
     pop fs

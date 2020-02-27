@@ -33,7 +33,7 @@ void list_prepend(struct list_node* head, struct list_node* node) {
 }
 
 void list_append(struct list_node* head, struct list_node* node) {
-    list_insert_before(head->prev, node);
+    list_insert_before(head, node);
 }
 
 void list_remove(struct list_node* node) {
@@ -47,4 +47,10 @@ struct list_node* list_pop(struct list_node* head) {
     return node;
 }
 
-
+void list_traverse(struct list_node* head, void (*func)(struct list_node*)) {
+    struct list_node* cur = head->next;
+    while(cur != head) {
+        func(cur);
+        cur = cur->next;
+    }
+}

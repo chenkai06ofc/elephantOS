@@ -23,6 +23,9 @@ static void idt_desc_init(void);
 static void pic_init(void);
 static void intr_handler_init(void);
 static void general_intr_handler(uint8_t vec_nr);
+static void invalid_opcode_handler(uint8_t vec_nr, uint32_t* context);
+static void general_protection_handler(uint8_t vec_nr, uint32_t* context);
+static void page_fault_handler(uint8_t vec_nr, uint32_t* context);
 
 static struct gate_desc idt[IDT_DESC_CNT]; // IDT table
 static char* intr_names[IDT_DESC_CNT];
@@ -35,6 +38,10 @@ void idt_init(void) {
     intr_handler_init();
     idt_desc_init();
     pic_init();
+
+    register_intr_handler(6, invalid_opcode_handler);
+    register_intr_handler(13, general_protection_handler);
+    register_intr_handler(14, page_fault_handler);
 
     uint64_t idt_setting = (((uint64_t)(uint32_t)idt) << 16) + sizeof(idt) -1;
     // this code will generate __stack_chk_fail_local symbol in interrupt.o
@@ -143,4 +150,23 @@ static void pic_init(void) {
     outb(PIC_S_DATA_PORT, 0xff);
 
     put_str("pic_init done\n");
+}
+
+
+static void invalid_opcode_handler(uint8_t vec_nr, uint32_t* context) {
+    put_str("intr name: ");put_str(intr_names[vec_nr]);put_str("\n");
+    put_str("intr eip: ");put_int(context[13]);put_str("\n");
+    while (1);
+}
+
+static void general_protection_handler(uint8_t vec_nr, uint32_t* context) {
+    put_str("intr name: ");put_str(intr_names[vec_nr]);put_str("\n");
+    put_str("intr eip: ");put_int(context[13]);put_str("\n");
+    while (1);
+}
+
+static void page_fault_handler(uint8_t vec_nr, uint32_t* context) {
+    put_str("intr name: ");put_str(intr_names[vec_nr]);put_str("\n");
+    put_str("intr eip: ");put_int(context[13]);put_str("\n");
+    while (1);
 }

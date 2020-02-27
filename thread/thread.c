@@ -87,5 +87,7 @@ void schedule(void) {
     list_append(&ready_list_head, &current->status_list_tag);
     struct task_struct* next = list_entry(struct task_struct, status_list_tag, list_pop(&ready_list_head));
     next->status = TASK_RUNNING;
+    //put_str("switch to: ");put_str(next->name); put_str("\n");
     switch_to(current, next);
 }
+
