@@ -26,9 +26,11 @@ int main(void) {
     timer_init();
     thread_init();
 
-    thread_start("test1", 20, test_thread_func, "A");
-    thread_start("test2", 20, test_thread_func, "B");
-    thread_start("test3", 20, test_thread_func, "C");
+    set_cursor(0);
+    put_str("display on start");
+//    thread_start("test1", 20, test_thread_func, "12345678 ");
+//    thread_start("test2", 20, test_thread_func, "abcdefgh ");
+//    thread_start("test3", 20, test_thread_func, "><)(~$#& ");
 
     intr_enable();
     while(1);

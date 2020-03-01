@@ -21,6 +21,7 @@ section .text
 global put_char
 global put_str
 global put_int
+global set_cursor
 
 ; -------------------- function put_char --------------------
 put_char:
@@ -59,7 +60,7 @@ put_char:
     mov byte [gs:bx + 1], CHAR_ATTR
     shr bx, 1
     inc bx
-    call .set_cursor
+    call _set_cursor
     popad
     ret ; end function call
 
@@ -68,7 +69,7 @@ put_char:
     shl bx, 1 ; double the bx to match the offset in VRAM
     mov word [gs:bx], CHAR_SPACE_WITH_ATTR
     shr bx, 1
-    call .set_cursor
+    call _set_cursor
     popad
     ret ; end function call
 
@@ -87,32 +88,10 @@ put_char:
     call .roll_screen
     mov bx, 1920
 .no_screen_overflow:
-    call .set_cursor
+    call _set_cursor
     popad
     ret ; end function call
 
-
-; function: set cursor location to bx
-; arguments
-;   bx: new cursor location
-; use
-;   ax, dx
-.set_cursor:
-    ; set high 8 bits
-    mov dx, ADDR_IO_PORT
-    mov al, IDX_CURSOR_LOCATION_HIGH
-    out dx, al
-    mov dx, DATA_IO_PORT
-    mov al, bh
-    out dx, al
-    ; set low 8 bits
-    mov dx, ADDR_IO_PORT
-    mov al, IDX_CURSOR_LOCATION_LOW
-    out dx, al
-    mov dx, DATA_IO_PORT
-    mov al, bl
-    out dx, al
-    ret
 
 ; function: move rows: 1~14 to 0~23, fill row 24 with spaces
 ; use
@@ -133,6 +112,40 @@ put_char:
     loop .clear_last_row
     ret
 
+; -------------------- function set_cursor --------------------
+; set cursor location
+; use: ax, bx, dx
+set_cursor:
+    push ebx
+    mov ebx, [esp + 8] ; put new cursor location into bx
+    call _set_cursor
+    pop ebx
+    ret
+
+; implementation of set_cursor function, and will be invoked internally by put_char
+; function: set cursor location to bx
+; arguments
+;   bx: new cursor location
+; use
+;   ax, dx
+_set_cursor:
+    ; set high 8 bits
+    mov dx, ADDR_IO_PORT
+    mov al, IDX_CURSOR_LOCATION_HIGH
+    out dx, al
+    mov dx, DATA_IO_PORT
+    mov al, bh
+    out dx, al
+    ; set low 8 bits
+    mov dx, ADDR_IO_PORT
+    mov al, IDX_CURSOR_LOCATION_LOW
+    out dx, al
+    mov dx, DATA_IO_PORT
+    mov al, bl
+    out dx, al
+    ret
+    
+    
 ; -------------------- function put_str --------------------
 ; print a char sequence end with 0
 put_str:
