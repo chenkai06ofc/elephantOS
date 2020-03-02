@@ -24,8 +24,14 @@ global put_int
 global set_cursor
 
 ; -------------------- function put_char --------------------
+; use: gs
+;   eax, ebx, ecx, edx, esi, edi
 put_char:
-    pushad ; back all registers
+    ; back registers for ABI
+    push ebx
+    push esi
+    push edi
+
     mov ax, SELECTOR_VIDEO
     mov gs, ax
 
@@ -46,7 +52,7 @@ put_char:
 
     mov bx, ax ; bx is the cursor location
 
-    mov ecx, [esp + 36] ; get input parameter, which is the char to output
+    mov ecx, [esp + 16] ; get input parameter, which is the char to output
     cmp cl, ASCII_CR
     jz .is_carriage_return
     cmp cl, ASCII_LF
@@ -61,8 +67,7 @@ put_char:
     shr bx, 1
     inc bx
     call .update_cursor
-    popad
-    ret ; end function call
+    jmp .exit
 
 .is_backspace:
     dec bx
@@ -70,8 +75,7 @@ put_char:
     mov word [gs:bx], CHAR_SPACE_WITH_ATTR
     shr bx, 1
     call _set_cursor
-    popad
-    ret ; end function call
+    jmp .exit
 
 ; CR & LF is handled together
 .is_line_feed:
@@ -83,7 +87,12 @@ put_char:
     sub bx, dx
     add bx, 80
     call .update_cursor
-    popad
+    jmp .exit
+
+.exit:
+    pop edi
+    pop esi
+    pop ebx
     ret ; end function call
 
 ; function: update cursor position, roll screen if needed
@@ -148,15 +157,14 @@ _set_cursor:
     mov al, bl
     out dx, al
     ret
-    
-    
+
 ; -------------------- function put_str --------------------
 ; print a char sequence end with 0
+; use: ebx, ecx
 put_str:
     push ebx
-    push ecx
     xor ecx, ecx
-    mov ebx, [esp + 12]
+    mov ebx, [esp + 8] ; ebx is target string addr
 .go_on_put_char:
     mov cl, [ebx]
     cmp cl, 0
@@ -167,18 +175,19 @@ put_str:
     inc ebx
     jmp .go_on_put_char
 .end_put_char:
-    pop ecx
     pop ebx
     ret
 
 ; -------------------- function put_int --------------------
+; use: eax, ecx, edx, ebp, edi
 section .data
 put_int_buffer db 0,0,0,0,0,0,0,0,0 ; 9 bytes buffer
 section .text
 put_int:
-    pushad
+    push ebp
+    push edi
     mov ebp, esp
-    mov eax, [ebp + 4*9]
+    mov eax, [ebp + 4*3]
 
     mov ecx, 8
     mov edi, 7
@@ -202,5 +211,6 @@ put_int:
     add esp, 4
 
     mov esp, ebp
-    popad
+    pop edi
+    pop ebp
     ret
