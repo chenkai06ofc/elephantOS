@@ -21,6 +21,4 @@
 #define IDT_P_DPL0_INTR_32 ((IDT_P << 7) + (IDT_DPL0 << 5) + IDT_INTR_32)
 #define IDT_P_DPL3_INTR_32 ((IDT_P << 7) + (IDT_DPL3 << 5) + IDT_INTR_32)
 
-#define NULL ((void *)0)
-
 #endif //__KERNEL_GLOBAL_H

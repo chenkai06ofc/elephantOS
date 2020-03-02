@@ -1,6 +1,7 @@
 #ifndef __LIB_KERNEL_LIST_H
 #define __LIB_KERNEL_LIST_H
 #include "../stdint.h"
+#include "../stdtypes.h"
 
 struct list_node {
     struct list_node* prev;
@@ -20,6 +21,8 @@ void list_append(struct list_node* head, struct list_node* node);
 
 void list_remove(struct list_node* node);
 struct list_node* list_pop(struct list_node* head);
+/** find whether the element is included in the list **/
+bool list_has_elem(struct list_node* head, struct list_node* target);
 /** traverse the list and apply func to all the nodes */
 void list_traverse(struct list_node* head, void (*func)(struct list_node*));
 

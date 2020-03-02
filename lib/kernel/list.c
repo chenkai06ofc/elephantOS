@@ -1,5 +1,6 @@
 #include "list.h"
 #include "../stdint.h"
+#include "../stdtypes.h"
 #include "../../kernel/debug.h"
 
 void list_init(struct list_node* head) {
@@ -45,6 +46,17 @@ struct list_node* list_pop(struct list_node* head) {
     struct list_node* node = head->next;
     list_remove(node);
     return node;
+}
+
+bool list_has_elem(struct list_node* head, struct list_node* target) {
+    struct list_node* node = head->next;
+    while (node != head) {
+        if (node == target) {
+            return true;
+        }
+        node = node->next;
+    }
+    return false;
 }
 
 void list_traverse(struct list_node* head, void (*func)(struct list_node*)) {
