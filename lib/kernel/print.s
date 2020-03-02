@@ -60,7 +60,7 @@ put_char:
     mov byte [gs:bx + 1], CHAR_ATTR
     shr bx, 1
     inc bx
-    call _set_cursor
+    call .update_cursor
     popad
     ret ; end function call
 
@@ -82,16 +82,20 @@ put_char:
     div si ; results are in ax, dx
     sub bx, dx
     add bx, 80
+    call .update_cursor
+    popad
+    ret ; end function call
+
+; function: update cursor position, roll screen if needed
+;   parameter: cursor position in bx
+.update_cursor:
     cmp bx, 2000
     jl .no_screen_overflow
-.screen_overflow:
     call .roll_screen
     mov bx, 1920
 .no_screen_overflow:
     call _set_cursor
-    popad
-    ret ; end function call
-
+    ret
 
 ; function: move rows: 1~14 to 0~23, fill row 24 with spaces
 ; use

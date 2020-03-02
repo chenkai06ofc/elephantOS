@@ -9,7 +9,9 @@
 void test_thread_func(void* arg) {
     char* p = arg;
     while (1) {
+        intr_disable();
         put_str(p);
+        intr_enable();
     }
 }
 
@@ -26,9 +28,14 @@ int main(void) {
     timer_init();
     thread_init();
 
-    thread_start("test1", 20, test_thread_func, "12345678 ");
-    thread_start("test2", 20, test_thread_func, "abcdefgh ");
-    thread_start("test3", 20, test_thread_func, "><)(~$#& ");
+    for (int i = 0; i < 1000; i++) {
+        put_str(" hello world13... ");
+        put_int(i);
+    }
+
+//    thread_start("test1", 20, test_thread_func, "123456 ");
+//    thread_start("test2", 20, test_thread_func, "abcdef ");
+//    thread_start("test3", 20, test_thread_func, "><)(~$ ");
 
     intr_enable();
     while(1);

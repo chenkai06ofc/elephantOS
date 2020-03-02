@@ -27,7 +27,7 @@ static void idt_desc_init(void);
 static void pic_init(void);
 static void intr_handler_init(void);
 static void general_intr_handler(uint8_t vec_nr);
-static void unrecover_exception_handler(uint8_t vec_nr, uint32_t* context);
+static void unrecover_exception_handler(uint8_t vec_nr);
 
 static struct gate_desc idt[IDT_DESC_CNT]; // IDT table
 static char* intr_names[IDT_DESC_CNT];
@@ -95,7 +95,7 @@ static void intr_handler_init(void) {
     intr_names[10] = "#TS Invalid TSS";
     intr_names[11] = "#NP Segment Not Present";
     intr_names[12] = "#SS Stack-Segment Fault";
-    intr_names[13] = "#TS General Protection";
+    intr_names[13] = "#GP General Protection";
     intr_names[14] = "#PF Page Fault";
 
     intr_names[16] = "#MF x87 FPU Floating-Point Error";
@@ -154,7 +154,7 @@ static void pic_init(void) {
 }
 
 
-static void unrecover_exception_handler(uint8_t vec_nr, uint32_t* context) {
+static void unrecover_exception_handler(uint8_t vec_nr) {
     set_cursor(0);
     // clear area for exception message
     for (int i = 0; i < 320; i++) {
@@ -163,7 +163,6 @@ static void unrecover_exception_handler(uint8_t vec_nr, uint32_t* context) {
     set_cursor(0);
     put_str("--------------------!!! exception happens !!!--------------------\n");
     put_str("  ");put_str("intr name: ");put_str(intr_names[vec_nr]);put_str("\n");
-    put_str("  ");put_str("intr eip: ");put_int(context[13]);put_str("\n");
     put_str("--------------------!!! exception message end !!!--------------------\n");
     while (1);
 }
