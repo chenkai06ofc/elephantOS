@@ -7,6 +7,7 @@ OBJS = $(BUILD_DIR)/kernel/main.o \
 	$(BUILD_DIR)/kernel/intr_entry_list.o \
 	$(BUILD_DIR)/device/timer.o \
 	$(BUILD_DIR)/device/console.o \
+	$(BUILD_DIR)/device/keyboard.o \
 	$(BUILD_DIR)/thread/thread.o \
 	$(BUILD_DIR)/thread/sync.o \
 	$(BUILD_DIR)/thread/switch.o \
@@ -60,6 +61,9 @@ $(BUILD_DIR)/device/timer.o: $(BUILD_DIR) device/timer.c
 
 $(BUILD_DIR)/device/console.o: $(BUILD_DIR) device/console.c
 	gcc -m32 -c $(CFLAGS) -o $@ device/console.c
+
+$(BUILD_DIR)/device/keyboard.o: $(BUILD_DIR) device/keyboard.c
+	gcc -m32 -c $(CFLAGS) -o $@ device/keyboard.c
 
 $(BUILD_DIR)/thread/thread.o: $(BUILD_DIR) thread/thread.c
 	gcc -m32 -c $(CFLAGS) -o $@ thread/thread.c

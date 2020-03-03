@@ -9,7 +9,7 @@
 #define PIC_S_CTRL_PORT 0xa0
 #define PIC_S_DATA_PORT 0xa1
 
-#define IDT_DESC_CNT 0x21
+#define IDT_DESC_CNT 0x30
 
 #define VEC_NR_INVALID_OPCODE       6
 #define VEC_NR_GENERAL_PROTECTION   13
@@ -155,7 +155,7 @@ static void pic_init(void) {
     outb(PIC_S_DATA_PORT, 0x02); // 0000_0010b
     outb(PIC_S_DATA_PORT, 0x01); // 0000_0001b
 
-    outb(PIC_M_DATA_PORT, 0xfe);
+    outb(PIC_M_DATA_PORT, 0xfd);  // only enable keyboard interrupt
     outb(PIC_S_DATA_PORT, 0xff);
 
     put_str("pic_init done\n");
