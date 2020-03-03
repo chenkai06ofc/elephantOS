@@ -2,6 +2,7 @@
 #include "../kernel/global.h"
 #include "../kernel/memory.h"
 #include "../kernel/interrupt.h"
+#include "../kernel/debug.h"
 #include "../lib/stdint.h"
 #include "../lib/string.h"
 #include "../lib/kernel/print.h"
@@ -82,12 +83,33 @@ static void make_main_thread(void) {
 
 void schedule(void) {
     struct task_struct* current = current_thread();
-    current->status = TASK_READY;
-    current->ticks = current->prio;
-    list_append(&ready_list_head, &current->status_list_tag);
+    // current thread tag should not already exist in ready list
+    ASSERT(!list_has_elem(&ready_list_head, &current->status_list_tag));
+    if (current->status == TASK_RUNNING) {
+        current->status = TASK_READY;
+        current->ticks = current->prio;
+        list_append(&ready_list_head, &current->status_list_tag);
+    }
+
     struct task_struct* next = list_entry(struct task_struct, status_list_tag, list_pop(&ready_list_head));
     next->status = TASK_RUNNING;
     //put_str("switch to: ");put_str(next->name); put_str("\n");
     switch_to(current, next);
 }
 
+void thread_block(void) {
+    enum intr_status prev_status = intr_disable();
+    struct task_struct* current = current_thread();
+    current->status = TASK_BLOCKED;
+    schedule();
+    set_intr_status(prev_status);
+}
+
+void thread_unblock(struct task_struct* pthread) {
+    enum intr_status prev_status = intr_disable();
+    if (pthread->status == TASK_BLOCKED) {
+        pthread->status = TASK_READY;
+        list_append(&ready_list_head, &pthread->status_list_tag);
+    }
+    set_intr_status(prev_status);
+}

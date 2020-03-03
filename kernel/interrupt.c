@@ -60,6 +60,14 @@ enum intr_status get_intr_status(void) {
     return (eflags & 0x00000200) ? INTR_ON : INTR_OFF;
 }
 
+void set_intr_status(enum intr_status stat) {
+    if (stat == INTR_ON) {
+        intr_enable();
+    } else {
+        intr_disable();
+    }
+}
+
 enum intr_status intr_enable(void) {
     enum intr_status old_status = get_intr_status();
     if (old_status == INTR_OFF) {

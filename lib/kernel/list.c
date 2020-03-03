@@ -43,6 +43,9 @@ void list_remove(struct list_node* node) {
 }
 
 struct list_node* list_pop(struct list_node* head) {
+    if (list_empty(head)) {
+        return NULL;
+    }
     struct list_node* node = head->next;
     list_remove(node);
     return node;

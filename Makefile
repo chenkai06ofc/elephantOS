@@ -7,6 +7,7 @@ OBJS = $(BUILD_DIR)/kernel/main.o \
 	$(BUILD_DIR)/kernel/intr_entry_list.o \
 	$(BUILD_DIR)/device/timer.o \
 	$(BUILD_DIR)/thread/thread.o \
+	$(BUILD_DIR)/thread/sync.o \
 	$(BUILD_DIR)/thread/switch.o \
 	$(BUILD_DIR)/lib/kernel/print.o \
 	$(BUILD_DIR)/lib/kernel/list.o \
@@ -58,6 +59,9 @@ $(BUILD_DIR)/device/timer.o: $(BUILD_DIR) device/timer.c
 
 $(BUILD_DIR)/thread/thread.o: $(BUILD_DIR) thread/thread.c
 	gcc -m32 -c $(CFLAGS) -o $@ thread/thread.c
+
+$(BUILD_DIR)/thread/sync.o: $(BUILD_DIR) thread/sync.c
+	gcc -m32 -c $(CFLAGS) -o $@ thread/sync.c
 
 # main
 $(BUILD_DIR)/kernel/main.o: $(BUILD_DIR) kernel/main.c

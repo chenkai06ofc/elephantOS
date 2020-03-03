@@ -5,11 +5,6 @@
 
 typedef void (*thread_func)(void*);
 
-void thread_init(void);
-struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg);
-struct task_struct* current_thread();
-void schedule(void);
-
 enum task_status {
     TASK_RUNNING,
     TASK_READY,
@@ -66,5 +61,13 @@ struct task_struct {
     uint32_t* pgdir;
     uint32_t stack_magic;
 };
+
+void thread_init(void);
+struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg);
+struct task_struct* current_thread();
+/** switch current thread off the CPU to another thread **/
+void schedule(void);
+void thread_block(void);
+void thread_unblock(struct task_struct* pthread);
 
 #endif //__THREAD_THREAD_H

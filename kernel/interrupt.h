@@ -8,6 +8,8 @@ void idt_init(void);
 void register_intr_handler(uint8_t vec_no, intr_handler_addr function);
 /** get current interrupt status */
 enum intr_status get_intr_status(void);
+/** set interrupt status */
+void set_intr_status(enum intr_status);
 /** enable interrupt, return the pre intr status */
 enum intr_status intr_enable(void);
 /** disable interrupt, return the pre intr status */
