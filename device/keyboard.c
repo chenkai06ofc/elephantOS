@@ -17,6 +17,7 @@
 #define l_shift_break       0xaa
 #define r_shift_make        0x36
 #define r_shift_break       0xb6
+#define caps_lock_make      0x3a
 
 static uint8_t keymap[][2] = {
 /* 0x00 */      { 0, 0 },
@@ -31,7 +32,7 @@ static uint8_t keymap[][2] = {
 /* 0x09 */      { '8', '(' },
 /* 0x0a */      { '9', ')' },
 /* 0x0b */      { '0', '~' },
-/* 0x0c */      { '0', '~' },
+/* 0x0c */      { '-', '=' },
 /* 0x0d */      { '0', '~' },
 /* 0x0e */      { backspace, backspace },   /* backspace */
 /* 0x0f */      { tab, tab },
@@ -45,8 +46,8 @@ static uint8_t keymap[][2] = {
 /* 0x17 */      { 'i', 'I' },
 /* 0x18 */      { 'o', 'O' },
 /* 0x19 */      { 'p', 'P' },
-/* 0x1a */      { '@', '`' },
-/* 0x1b */      { '[', '{' },
+/* 0x1a */      { '[', '{' },
+/* 0x1b */      { ']', '}' },
 /* 0x1c */      { enter, enter },   /* enter */
 /* 0x1d */      { 0, 0 },       /* left ctrl */
 /* 0x1e */      { 'a', 'A' },
@@ -58,11 +59,11 @@ static uint8_t keymap[][2] = {
 /* 0x24 */      { 'j', 'J' },
 /* 0x25 */      { 'k', 'K' },
 /* 0x26 */      { 'l', 'L' },
-/* 0x27 */      { ';', '+' },
-/* 0x28 */      { ':', '*' },
+/* 0x27 */      { ';', ':' },
+/* 0x28 */      { ';', ':' },
 /* 0x29 */      { ']', '}' },
 /* 0x2a */      { 0, 0 },       /* left shift */
-/* 0x2b */      { '0', '0' },
+/* 0x2b */      { '\\', '_' },
 /* 0x2c */      { 'z', 'Z' },
 /* 0x2d */      { 'x', 'X' },
 /* 0x2e */      { 'c', 'C' },
@@ -77,42 +78,42 @@ static uint8_t keymap[][2] = {
 /* 0x37 */      { 0, 0 },
 /* 0x38 */      { 0, 0 },       /* left alt */
 /* 0x39 */      { ' ', ' ' },   /* space */
+/* 0x3a */      { 0, 0 },       /* caps lock */
 };
 
-static bool l_shift_down, r_shift_down;
+static bool l_shift_down, r_shift_down, caps_lock;
+static bool shift_reset;
 
 static void keyboard_intr_handler(void) {
     uint8_t scancode = inb(KEYBOARD_BUF_PORT);
+//    put_int(scancode);put_char('\n');
     switch (scancode) {
+        // use left shift as caps lock
         case l_shift_make:
-            l_shift_down = true;
+            if (shift_reset) {
+                caps_lock = !caps_lock;
+                shift_reset = false;
+            }
             break;
         case l_shift_break:
-            l_shift_down = false;
-            break;
-        case r_shift_make:
-            r_shift_down = true;
-            break;
-        case r_shift_break:
-            r_shift_down = false;
+            shift_reset = true;
             break;
         default:
             if (scancode < 0x40) {
-                uint8_t ch = (l_shift_down || r_shift_down) ? keymap[scancode][1] : keymap[scancode][0];
-                put_int(ch);put_char(' ');
-                if (ch == 0) {
-                    put_int(scancode);put_char('\n');
-                } else {
+                uint8_t ch = caps_lock ? keymap[scancode][1] : keymap[scancode][0];
+                if (ch != 0) {
                     put_char(ch);
                 }
-                put_char('\n');
             }
     }
     return;
 }
 
 void keyboard_init(void) {
+    l_shift_down = false;
+    r_shift_down = false;
+    caps_lock = false;
+    shift_reset = true;
     register_intr_handler(0x21, keyboard_intr_handler);
     put_str("keyboard init done\n");
-
 }
