@@ -155,7 +155,7 @@ static void pic_init(void) {
     outb(PIC_S_DATA_PORT, 0x02); // 0000_0010b
     outb(PIC_S_DATA_PORT, 0x01); // 0000_0001b
 
-    outb(PIC_M_DATA_PORT, 0xfd);  // only enable keyboard interrupt
+    outb(PIC_M_DATA_PORT, 0xfe);  // only enable timer interrupt
     outb(PIC_S_DATA_PORT, 0xff);
 
     put_str("pic_init done\n");

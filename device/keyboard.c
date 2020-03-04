@@ -1,6 +1,6 @@
 #include "keyboard.h"
 #include "../kernel/interrupt.h"
-#include "../lib/stdtypes.h"
+#include "../lib/common.h"
 #include "../lib/kernel/io.h"
 #include "../lib/kernel/print.h"
 

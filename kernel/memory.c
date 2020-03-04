@@ -1,7 +1,7 @@
 #include "memory.h"
 #include "bitmap.h"
 #include "../lib/stdint.h"
-#include "../lib/stdtypes.h"
+#include "../lib/common.h"
 #include "../lib/string.h"
 #include "../lib/kernel/print.h"
 

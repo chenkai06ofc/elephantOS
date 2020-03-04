@@ -24,9 +24,9 @@ int main(void) {
     console_init();
     keyboard_init();
 
-//    thread_start("test1", 10, test_thread_func, "123456 ");
-//    thread_start("test2", 20, test_thread_func, "abcdef ");
-//    thread_start("test3", 20, test_thread_func, "...... ");
+    thread_start("test1", 10, test_thread_func, "123456 ");
+    thread_start("test2", 10, test_thread_func, "abcdef ");
+    thread_start("test3", 10, test_thread_func, "...... ");
 
     intr_enable();
     int a = 0;

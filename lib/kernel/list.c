@@ -1,6 +1,6 @@
 #include "list.h"
 #include "../stdint.h"
-#include "../stdtypes.h"
+#include "../common.h"
 #include "../../kernel/debug.h"
 
 void list_init(struct list_node* head) {

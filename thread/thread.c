@@ -3,6 +3,7 @@
 #include "../kernel/memory.h"
 #include "../kernel/interrupt.h"
 #include "../kernel/debug.h"
+#include "../lib/common.h"
 #include "../lib/stdint.h"
 #include "../lib/string.h"
 #include "../lib/kernel/print.h"
@@ -91,7 +92,7 @@ void schedule(void) {
         list_append(&ready_list_head, &current->status_list_tag);
     }
 
-    struct task_struct* next = list_entry(struct task_struct, status_list_tag, list_pop(&ready_list_head));
+    struct task_struct* next = field_to_struct_ptr(struct task_struct, status_list_tag, list_pop(&ready_list_head));
     next->status = TASK_RUNNING;
     //put_str("switch to: ");put_str(next->name); put_str("\n");
     switch_to(current, next);

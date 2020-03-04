@@ -1,7 +1,7 @@
 #ifndef __LIB_KERNEL_LIST_H
 #define __LIB_KERNEL_LIST_H
 #include "../stdint.h"
-#include "../stdtypes.h"
+#include "../common.h"
 
 struct list_node {
     struct list_node* prev;
@@ -25,8 +25,5 @@ struct list_node* list_pop(struct list_node* head);
 bool list_has_elem(struct list_node* head, struct list_node* target);
 /** traverse the list and apply func to all the nodes */
 void list_traverse(struct list_node* head, void (*func)(struct list_node*));
-
-#define list_entry(struct_type_name, field_name, field_ptr) \
-    (struct_type_name*) ((uint32_t)field_ptr - (uint32_t)(&((struct_type_name*)0)->field_name))
 
 #endif //__LIB_KERNEL_LIST_H

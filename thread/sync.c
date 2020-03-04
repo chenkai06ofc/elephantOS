@@ -1,6 +1,7 @@
 #include "sync.h"
 #include "../kernel/interrupt.h"
 #include "../kernel/debug.h"
+#include "../lib/common.h"
 #include "../lib/stdint.h"
 #include "../lib/kernel/list.h"
 
@@ -24,7 +25,7 @@ void semaphore_up(struct semaphore* psem) {
     enum intr_status prev_status = intr_disable();
     struct list_node* node = list_pop(&psem->block_list);
     if (node != NULL) {
-        struct task_struct* pthread = list_entry(struct task_struct, status_list_tag, node);
+        struct task_struct* pthread = field_to_struct_ptr(struct task_struct, status_list_tag, node);
         thread_unblock(pthread);
     }
     psem->value++;
