@@ -1,58 +1,17 @@
 ; Macro definition file
 ;---------- gdt descriptor attributes ----------
-DESC_G_4K equ 1000_0000_0000_0000_0000_0000b
-DESC_D_32 equ 100_0000_0000_0000_0000_0000b
-DESC_L equ 00_0000_0000_0000_0000_0000b
 
-DESC_AVL equ 0_0000_0000_0000_0000_0000b ; AVL, cpu doesn't use this bit
-DESC_LIMIT_CODE2 equ 1111_0000_0000_0000_0000b
-DESC_LIMIT_DATA2 equ DESC_LIMIT_CODE2
-DESC_LIMIT_VIDEO2 equ 0000_0000_0000_0000_0000b
-
-DESC_P equ 1000_0000_0000_0000b
-DESC_DPL_0 equ 000_0000_0000_0000b
-DESC_DPL_1 equ 010_0000_0000_0000b
-DESC_DPL_2 equ 100_0000_0000_0000b
-DESC_DPL_3 equ 110_0000_0000_0000b
-
-; common attributes
-DESC_G4K_D32_AVL_P_DPL0 equ DESC_G_4K + DESC_D_32 + DESC_L + DESC_AVL + DESC_P + DESC_DPL_0
-
-DESC_S_CODE equ 1_0000_0000_0000b
-DESC_S_DATA equ DESC_S_CODE
-DESC_S_SYS equ 0_0000_0000_0000b
-DESC_TYPE_CODE equ 1000_0000_0000b
-DESC_TYPE_DATA equ 0010_0000_0000b
-
-; base
-CODE_BASE equ 0
-DATA_BASE equ 0
-PHY_VIDEO_BASE equ 0xb8000
-VIR_VIDEO_BASE equ 0xc00b_8000
-
-; limit
-CODE_4K_LIMIT equ 0xfffff
-DATA_4K_LIMIT equ 0xfffff
-VIDEO_4K_LIMIT equ 7
-
-; code descriptors
-DESC_CODE_HIGH equ DESC_G4K_D32_AVL_P_DPL0 + DESC_S_CODE + DESC_TYPE_CODE +\
-    (CODE_BASE & 0xff000000) + (CODE_4K_LIMIT & 0xff0000) + ((CODE_BASE & 0xff0000) >> 16)
-DESC_CODE_LOW equ ((CODE_BASE & 0x0000ffff) << 16) + (CODE_4K_LIMIT & 0x0000ffff)
-
-; data descriptors
-DESC_DATA_HIGH equ DESC_G4K_D32_AVL_P_DPL0 + DESC_S_DATA + DESC_TYPE_DATA +\
-    (DATA_BASE & 0xff000000) + (DATA_4K_LIMIT & 0xff0000) + ((DATA_BASE & 0xff0000) >> 16)
-DESC_DATA_LOW equ ((DATA_BASE & 0x0000ffff) << 16) + (DATA_4K_LIMIT & 0x0000ffff)
-
-; video descriptors
-DESC_PHY_VIDEO_HIGH equ DESC_G4K_D32_AVL_P_DPL0 + DESC_S_DATA + DESC_TYPE_DATA +\
-    (PHY_VIDEO_BASE & 0xff000000) + (VIDEO_4K_LIMIT & 0xff0000) + ((PHY_VIDEO_BASE & 0xff0000) >> 16)
-DESC_PHY_VIDEO_LOW equ ((PHY_VIDEO_BASE & 0x0000ffff) << 16) + (VIDEO_4K_LIMIT & 0x0000ffff)
-
-DESC_VIR_VIDEO_HIGH equ DESC_G4K_D32_AVL_P_DPL0 + DESC_S_DATA + DESC_TYPE_DATA +\
-    (VIR_VIDEO_BASE & 0xff000000) + (VIDEO_4K_LIMIT & 0xff0000) + ((VIR_VIDEO_BASE & 0xff0000) >> 16)
-DESC_VIR_VIDEO_LOW equ ((VIR_VIDEO_BASE & 0x0000ffff) << 16) + (VIDEO_4K_LIMIT & 0x0000ffff)
+; arguments
+;   1:BASE, 2:LIMIT, 3:G, 4:D, 5:P, 6:DPL, 7:S, 8:TYPE
+%macro DD_SEG_DESC_HIGH 8
+    dd (%1 & 0xff000000) + (%3 << 23) + (%4 << 22) + (%2 & 0xff0000) + (%5 << 15) +\
+    (%6 << 13) + (%7 << 12) + (%8 << 8) + ((%1 & 0xff0000) >> 16)
+%endmacro
+; arguments
+;   1:BASE, 2:LIMIT
+%macro DD_SEG_DESC_LOW 2
+    dd ((%1 & 0x0000ffff) << 16) + (%2 & 0x0000ffff)
+%endmacro
 
 ;---------- selector attribute ----------
 RPL0 equ 00b
@@ -61,4 +20,3 @@ RPL2 equ 10b
 RPL3 equ 11b
 TI_GDT equ 000b
 TI_LDT equ 100b
-

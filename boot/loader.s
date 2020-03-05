@@ -6,20 +6,36 @@ SECTION LOADER vstart=LOADER_BASE_ADDR
 jmp loader_start
 
 ;---------- GDT table ----------
-GDT_BASE: dd 0x00000000, 0x00000000
-CODE_DESC: dd DESC_CODE_LOW, DESC_CODE_HIGH
-DATA_STACK_DESC: dd DESC_DATA_LOW, DESC_DATA_HIGH
-VIDEO_DESC: dd DESC_PHY_VIDEO_LOW, DESC_PHY_VIDEO_HIGH ;limit=(0xbffff-0xb8000)/4k=0x7
-;---------- selector definition ----------
-SELECTOR_CODE equ (0x0001<<3) + TI_GDT + RPL0
-SELECTOR_DATA equ (0x0002<<3) + TI_GDT + RPL0
-SELECTOR_VIDEO equ (0x0003<<3) + TI_GDT + RPL0
+; DD_SEG_DESC_LOW   1:BASE, 2:LIMIT
+; DD_SEG_DESC_HIGH  1:BASE, 2:LIMIT, 3:G, 4:D, 5:P, 6:DPL, 7:S, 8:TYPE
+GDT_BASE:           dd 0x00000000, 0x00000000
+K_CODE_DESC:        DD_SEG_DESC_LOW 0, 0xfffff
+                    DD_SEG_DESC_HIGH 0, 0xfffff, 1, 1, 1, 0, 1, 1000b
+K_DATA_STACK_DESC:  DD_SEG_DESC_LOW 0, 0xfffff
+                    DD_SEG_DESC_HIGH 0, 0xfffff, 1, 1, 1, 0, 1, 0010b
+VIDEO_DESC:         DD_SEG_DESC_LOW 0xb8000, 7 ;limit=(0xbffff-0xb8000)/4k=0x7
+                    DD_SEG_DESC_HIGH 0xb8000, 7, 1, 1, 1, 0, 1, 0010b
+TSS_DESC:           DD_SEG_DESC_LOW 0, 103
+                    DD_SEG_DESC_HIGH 0, 103, 1, 0, 1, 0, 0, 1001b ; not busy, if busy TYPE will be 1011b
+U_CODE_DESC:        DD_SEG_DESC_LOW 0, 0xfffff
+                    DD_SEG_DESC_HIGH 0, 0xfffff, 1, 1, 1, 3, 1, 1000b
+U_DATA_STACK_DESC:  DD_SEG_DESC_LOW 0, 0xfffff
+                    DD_SEG_DESC_HIGH 0, 0xfffff, 1, 1, 1, 3, 1, 0010b
 
 GDT_SIZE equ $-GDT_BASE
 GDT_LIMIT equ GDT_SIZE - 1
 
-gdt_ptr dw GDT_LIMIT
-        dd GDT_BASE
+;---------- selector definition ----------
+SELECTOR_K_CODE equ (0x0001<<3) + TI_GDT + RPL0
+SELECTOR_K_DATA equ (0x0002<<3) + TI_GDT + RPL0
+SELECTOR_VIDEO equ (0x0003<<3) + TI_GDT + RPL0
+
+; video desc for use after entering protected mode
+DESC_VIR_VIDEO_LOW: DD_SEG_DESC_LOW 0xc00b_8000, 7
+DESC_VIR_VIDEO_HIGH: DD_SEG_DESC_HIGH 0xc00b_8000, 7, 1, 1, 1, 0, 1, 0010b
+
+gdt_ptr:    dw GDT_LIMIT
+            dd GDT_BASE
 
 msg: db "loader is running..."
 msg_len: dw $-msg
@@ -67,7 +83,7 @@ loader_start:
     or eax, 0x0000_0001
     mov cr0, eax
 
-    jmp dword SELECTOR_CODE:protected_mode_start
+    jmp dword SELECTOR_K_CODE:protected_mode_start
 
 %include "util_print.s"
 %include "util_hd.s"
@@ -76,7 +92,7 @@ loader_start:
 ; -------------------- 32-bit mode start --------------------
 [bits 32]
 protected_mode_start:
-    mov ax, SELECTOR_DATA
+    mov ax, SELECTOR_K_DATA
     mov ds, ax
     mov es, ax
     mov ss, ax
@@ -86,8 +102,10 @@ protected_mode_start:
 
     ; ---------- prepare to reload gdt ----------
     sgdt [gdt_ptr]
-    mov dword [VIDEO_DESC], DESC_VIR_VIDEO_LOW
-    mov dword [VIDEO_DESC + 4], DESC_VIR_VIDEO_HIGH
+    mov eax, [DESC_VIR_VIDEO_LOW]
+    mov [VIDEO_DESC], eax
+    mov eax, [DESC_VIR_VIDEO_HIGH]
+    mov [VIDEO_DESC + 4], eax
     add dword [gdt_ptr + 2], 0xc000_0000
 
     ; ---------- Steps to enable paging ----------
