@@ -9,8 +9,6 @@
 #include "../lib/kernel/print.h"
 #include "../lib/kernel/list.h"
 
-#define PG_SIZE     0x1000
-
 struct task_struct* main_thread;
 struct list_node ready_list_head;
 struct list_node all_list_head;
@@ -38,6 +36,7 @@ static void kernel_thread(thread_func function, void* func_arg) {
     function(func_arg);
 }
 
+/** init a page of memory to a task_struct structure */
 static void init_thread(struct task_struct* thread, char* name, int prio) {
     memset(thread, 0, sizeof(struct task_struct));
     strcpy(thread->name, name);
@@ -55,6 +54,7 @@ static void init_thread(struct task_struct* thread, char* name, int prio) {
     thread->stack_magic = 0xFEFE8964;
 }
 
+/** fill the thread's kernel stack by execute enviroment */
 static void thread_create(struct task_struct* thread, thread_func function, void* func_arg) {
     thread->kstack -= sizeof(struct intr_stack);
     thread->kstack -= sizeof(struct thread_stack);
@@ -83,6 +83,7 @@ static void make_main_thread(void) {
 }
 
 void schedule(void) {
+    ASSERT(get_intr_status() == INTR_OFF);
     struct task_struct* current = current_thread();
     // current thread tag should not already exist in ready list
     ASSERT(!list_has_elem(&ready_list_head, &current->status_list_tag));

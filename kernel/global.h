@@ -9,8 +9,13 @@
 #define TI_GDT 0
 #define TI_LDT 1
 
-#define SELECTOR_KERNEL_CODE ((1 << 3) + (TI_GDT << 2) + RPL0)
-#define SELECTOR_KERNEL_DATA ((2 << 3) + (TI_GDT << 2) + RPL0)
+#define SELECTOR_K_CODE     ((1 << 3) + (TI_GDT << 2) + RPL0)
+#define SELECTOR_K_DATA     ((2 << 3) + (TI_GDT << 2) + RPL0)
+#define SELECTOR_K_STACK    SELECTOR_K_DATA
+#define SELECTOR_TSS        ((4 << 3) + (TI_GDT << 2) + RPL0)
+#define SELECTOR_U_CODE     ((5 << 3) + (TI_GDT << 2) + RPL3)
+#define SELECTOR_U_DATA     ((6 << 3) + (TI_GDT << 2) + RPL3)
+#define SELECTOR_U_STACK    SELECTOR_U_DATA
 
 #define IDT_P 1
 #define IDT_DPL0 0

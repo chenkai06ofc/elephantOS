@@ -127,7 +127,7 @@ static void general_intr_handler(uint8_t vec_nr) {
 
 static void make_idt_desc(struct gate_desc* p_desc, uint8_t attr, intr_handler_addr function) {
     p_desc->func_offset_low = ((uint32_t)function & 0x0000FFFF);
-    p_desc->selector = SELECTOR_KERNEL_CODE;
+    p_desc->selector = SELECTOR_K_CODE;
     p_desc->dcount = 0;
     p_desc->attribute = attr;
     p_desc->func_offset_high = (((uint32_t)function & 0xFFFF0000) >> 16);
