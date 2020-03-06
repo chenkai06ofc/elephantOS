@@ -3,8 +3,9 @@ BUILD_DIR = ./build
 C_OBJS = kernel/main.o \
 		kernel/interrupt.o \
 		kernel/debug.o \
-		kernel/bitmap.o \
-		kernel/memory.o \
+		mm/bitmap.o \
+		mm/addr_pool.o \
+		mm/memory.o \
 		device/timer.o \
 		device/console.o \
 		device/keyboard.o \

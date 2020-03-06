@@ -1,5 +1,7 @@
 #ifndef __THREAD_THREAD_H
 #define __THREAD_THREAD_H
+
+#include "../mm/addr_pool.h"
 #include "../lib/stdint.h"
 #include "../lib/kernel/list.h"
 
@@ -61,6 +63,7 @@ struct task_struct {
     struct list_node all_list_tag;
 
     uint32_t* pgdir;
+    struct vaddr_pool vaddr_pool;
     uint32_t stack_magic;
 };
 

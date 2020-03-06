@@ -1,5 +1,7 @@
 #include "memory.h"
 #include "bitmap.h"
+#include "addr_pool.h"
+#include "../thread/thread.h"
 #include "../lib/stdint.h"
 #include "../lib/common.h"
 #include "../lib/string.h"
@@ -21,8 +23,6 @@
 struct paddr_pool p_kernel_pool, p_user_pool;
 struct vaddr_pool v_kernel_pool;
 
-static void* valloc(enum pool_flag pf, uint32_t cnt);
-static void* palloc(struct paddr_pool* pool_ptr);
 static void map_vaddr_paddr(uint32_t vaddr, uint32_t paddr);
 
 void mem_init() {
@@ -81,16 +81,17 @@ void mem_init() {
     put_str("mem_init done\n");
 }
 
-/** allocate cnt virtual pages, return start vaddr if succeed, return NULL if failed */
+/** allocate cnt virtual pages, and map to physical paegs, return start vaddr if succeed, return NULL if failed */
 void* malloc_page(enum pool_flag pf, uint32_t cnt) {
-    void* vaddr = valloc(pf, cnt);
+    struct vaddr_pool* v_pool = (pf == PF_KERNEL) ? &v_kernel_pool : &current_thread()->vaddr_pool;
+    void* vaddr = vaddr_alloc(v_pool, cnt);
     if (vaddr == NULL) {
         return NULL;
     }
     uint32_t vaddr_scalar = (uint32_t) vaddr;
-    struct paddr_pool* pool_ptr = (pf == PF_KERNEL) ? &p_kernel_pool : &p_user_pool;
+    struct paddr_pool* p_pool = (pf == PF_KERNEL) ? &p_kernel_pool : &p_user_pool;
     for (int i = 0; i < cnt; i++) {
-        void* p_addr = palloc(pool_ptr);
+        void* p_addr = paddr_alloc(p_pool);
         map_vaddr_paddr(vaddr_scalar, (uint32_t) p_addr);
         vaddr_scalar += PG_SIZE;
     }
@@ -105,41 +106,12 @@ void* get_kernel_pages(uint32_t cnt) {
     return vaddr;
 }
 
-/** allocate cnt pages from virtual memory pool identified by pf */
-static void* valloc(enum pool_flag pf, uint32_t cnt) {
-    if (pf == PF_KERNEL) {
-        uint32_t start_idx = bitmap_scan(&v_kernel_pool.bitmap, cnt);
-        if (start_idx == -1) {
-            return NULL;
-        } else {
-            for (int i = 0; i < cnt; i++) {
-                bitmap_set(&v_kernel_pool.bitmap, start_idx + i, 1);
-            }
-            return (void*)(v_kernel_pool.vaddr_start + start_idx * PG_SIZE);
-        }
-    } else {
-        // v_user_pool not yet implemented
-        return NULL;
-    }
-}
-
-/** allocate 1 page from physical memory pool pool_ptr */
-static void* palloc(struct paddr_pool* pool_ptr) {
-    uint32_t start_idx = bitmap_scan(&pool_ptr->bitmap, 1);
-    if (start_idx == -1) {
-        return NULL;
-    } else {
-        bitmap_set(&pool_ptr->bitmap, start_idx, 1);
-        return (void*)(pool_ptr->paddr_start + start_idx * PG_SIZE);
-    }
-}
-
 static void map_vaddr_paddr(uint32_t vaddr, uint32_t paddr) {
     uint32_t* pde_ptr = PDE_PTR(vaddr);
     uint32_t* pte_ptr = PTE_PTR(vaddr);
     // PDE not present
     if (!(*pde_ptr) & PG_P_1) {
-        uint32_t pt_page_paddr = (uint32_t)palloc(&p_kernel_pool);
+        uint32_t pt_page_paddr = (uint32_t)paddr_alloc(&p_kernel_pool);
         *pde_ptr = pt_page_paddr | PG_US_U | PG_RW_W | PG_P_1;
         // pt_page_paddr is physical address, cannot be used directly
         memset((void*)((uint32_t)pte_ptr & 0xfffff000), 0, PG_SIZE);

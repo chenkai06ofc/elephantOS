@@ -1,10 +1,10 @@
 #include "interrupt.h"
-#include "memory.h"
 #include "debug.h"
 #include "../lib/string.h"
 #include "../device/timer.h"
 #include "../device/console.h"
 #include "../device/keyboard.h"
+#include "../mm/memory.h"
 #include "../thread/thread.h"
 
 void test_thread_func(void* arg) {

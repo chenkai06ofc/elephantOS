@@ -1,6 +1,6 @@
 #include "thread.h"
 #include "../kernel/global.h"
-#include "../kernel/memory.h"
+#include "../mm/memory.h"
 #include "../kernel/interrupt.h"
 #include "../kernel/debug.h"
 #include "../lib/common.h"

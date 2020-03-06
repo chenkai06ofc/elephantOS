@@ -1,5 +1,5 @@
 #include "bitmap.h"
-#include "debug.h"
+#include "../kernel/debug.h"
 #include "../lib/stdint.h"
 #include "../lib/string.h"
 
