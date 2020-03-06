@@ -54,7 +54,7 @@ static void init_thread(struct task_struct* thread, char* name, int prio) {
     thread->stack_magic = 0xFEFE8964;
 }
 
-/** fill the thread's kernel stack by execute enviroment */
+/** fill thread's kernel stack with execute environment */
 static void thread_create(struct task_struct* thread, thread_func function, void* func_arg) {
     thread->kstack -= sizeof(struct intr_stack);
     thread->kstack -= sizeof(struct thread_stack);

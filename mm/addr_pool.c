@@ -18,12 +18,12 @@ void* vaddr_alloc(struct vaddr_pool* v_pool, uint32_t cnt) {
 }
 
 void* paddr_alloc(struct paddr_pool* p_pool) {
-    uint32_t idx = bitmap_scan(&pool_ptr->bitmap, 1);
+    uint32_t idx = bitmap_scan(&p_pool->bitmap, 1);
     if (idx == -1) {
         return NULL;
     } else {
-        bitmap_set(&pool_ptr->bitmap, idx, 1);
-        return (void*)(pool_ptr->paddr_start + idx * PG_SIZE);
+        bitmap_set(&p_pool->bitmap, idx, 1);
+        return (void*)(p_pool->paddr_start + idx * PG_SIZE);
     }
 }
 

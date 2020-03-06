@@ -17,13 +17,15 @@ struct paddr_pool {
     uint32_t pool_size;
 };
 
-/** allocate cnt pages from virtual address pool.
+/**
+ *  Allocate cnt pages from virtual address pool.
  *  Note: only addresses are allocated, page table is not yet changed.
  **/
 void* vaddr_alloc(struct vaddr_pool* v_pool, uint32_t cnt);
 
-/** allocate 1 page from physical address pool
- * Note: only addresses are allocated, page table is not yet changed.
+/**
+ *  Allocate 1 page from physical address pool
+ *  Note: only addresses are allocated, page table is not yet changed.
  **/
 void* paddr_alloc(struct paddr_pool* p_pool);
 

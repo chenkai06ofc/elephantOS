@@ -32,7 +32,7 @@ void tss_init() {
     memset(&tss, 0, tss_size);
     tss.ss0 = SELECTOR_K_STACK;
     tss.io_base = tss_size;
-    update_desc((struct gdt_desc*)0xc0000920, &tss, tss_size - 1);
+    update_desc((struct gdt_desc*)0xc0000922, &tss, tss_size - 1);
     asm volatile("ltr %w0" : : "r" (SELECTOR_TSS));
     put_str("tss_init done\n");
 }
