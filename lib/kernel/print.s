@@ -113,8 +113,8 @@ put_char:
     cld
     mov ecx, 960 ; 80 * 15 - 80 = 1920 chars to move, 2 bytes/per char, 4 bytes/per move, so we need 960 moves
     ; ds, es both start from 0
-    mov esi, 0xb80a0 ; head of row 1
-    mov edi, 0xb8000 ; head of row 0
+    mov esi, 0xc00b80a0 ; head of row 1
+    mov edi, 0xc00b8000 ; head of row 0
     rep movsd
     ; clear last row
     mov esi, (2000 - 80) * 2 ; head of last row
