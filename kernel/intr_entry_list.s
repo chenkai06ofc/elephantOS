@@ -5,12 +5,8 @@
 extern put_str
 extern intr_handler_list
 
-section .data
-intr_msg db "interrupt occur!", 0xa, 0
-
 global intr_exit
 global intr_entry_list
-intr_entry_list:
 
 %macro INTR_ENTRY 2
 section .text
@@ -46,6 +42,8 @@ intr_exit:
     add esp, 4 ; skip error_code
     iret
 
+section .data
+intr_entry_list:
 INTR_ENTRY 0x00, NO_ERROR_CODE
 INTR_ENTRY 0x01, NO_ERROR_CODE
 INTR_ENTRY 0x02, NO_ERROR_CODE
