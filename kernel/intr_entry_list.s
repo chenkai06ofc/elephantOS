@@ -8,6 +8,7 @@ extern intr_handler_list
 section .data
 intr_msg db "interrupt occur!", 0xa, 0
 
+global intr_exit
 global intr_entry_list
 intr_entry_list:
 
@@ -29,19 +30,21 @@ intr%1entry:
     ;push esp
     push %1
     call [intr_handler_list + %1*4]
-    add esp, 4
+    jmp intr_exit
+section .data
+    dd intr%1entry
+%endmacro
 
+section .text
+intr_exit:
+    add esp, 4 ; skip vec_no
     popad
     pop fs
     pop gs
     pop es
     pop ds
-
     add esp, 4 ; skip error_code
     iret
-section .data
-    dd intr%1entry
-%endmacro
 
 INTR_ENTRY 0x00, NO_ERROR_CODE
 INTR_ENTRY 0x01, NO_ERROR_CODE
