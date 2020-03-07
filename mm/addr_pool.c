@@ -1,5 +1,6 @@
 #include "addr_pool.h"
 #include "bitmap.h"
+#include "../kernel/debug.h"
 #include "../lib/stdint.h"
 #include "../lib/common.h"
 
@@ -27,3 +28,8 @@ void* paddr_alloc(struct paddr_pool* p_pool) {
     }
 }
 
+void valloc_page_at(struct vaddr_pool* v_pool, uint32_t vaddr) {
+    uint32_t page_idx = (vaddr - v_pool->vaddr_start) / PG_SIZE;
+    ASSERT(!bitmap_test(&v_pool->bitmap, page_idx));
+    bitmap_set(&v_pool->bitmap, page_idx, 1);
+}

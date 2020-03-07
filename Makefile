@@ -6,6 +6,7 @@ C_OBJS = kernel/main.o \
 		mm/bitmap.o \
 		mm/addr_pool.o \
 		mm/memory.o \
+		userprog/tss.o \
 		device/timer.o \
 		device/console.o \
 		device/keyboard.o \

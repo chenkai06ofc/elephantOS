@@ -29,4 +29,8 @@ void* vaddr_alloc(struct vaddr_pool* v_pool, uint32_t cnt);
  **/
 void* paddr_alloc(struct paddr_pool* p_pool);
 
+/**
+ * Allocate 1 page at a specified address.
+ */
+void valloc_page_at(struct vaddr_pool* v_pool, uint32_t vaddr);
 #endif //__MM_ADDR_POOL_H

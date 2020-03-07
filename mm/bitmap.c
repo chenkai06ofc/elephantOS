@@ -2,12 +2,13 @@
 #include "../kernel/debug.h"
 #include "../lib/stdint.h"
 #include "../lib/string.h"
+#include "../lib/common.h"
 
 void bitmap_init(struct bitmap* btmp) {
     memset(btmp->bits, 0, btmp->len_in_bytes);
 }
 
-int bitmap_test(struct bitmap* btmp, uint32_t bit_idx) {
+bool bitmap_test(struct bitmap* btmp, uint32_t bit_idx) {
     ASSERT(bit_idx < (btmp->len_in_bytes * 8));
     uint32_t byte_idx = bit_idx / 8;
     uint32_t bit_offset = bit_idx % 8;

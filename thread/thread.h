@@ -8,6 +8,7 @@
 #define PG_SIZE     0x1000
 
 typedef void (*thread_func)(void*);
+typedef void (*process_func)(void);
 
 enum task_status {
     TASK_RUNNING,
@@ -62,13 +63,14 @@ struct task_struct {
     struct list_node status_list_tag;
     struct list_node all_list_tag;
 
-    uint32_t* pgdir;
+    void* pgdir; // virtual address of thread's page directory
     struct vaddr_pool vaddr_pool;
     uint32_t stack_magic;
 };
 
 void thread_init(void);
 struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg);
+void process_execute(char* name, process_func func);
 struct task_struct* current_thread();
 /** switch current thread off the CPU to another thread **/
 void schedule(void);
