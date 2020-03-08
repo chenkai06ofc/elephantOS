@@ -1,10 +1,10 @@
 #include "addr_pool.h"
 #include "bitmap.h"
 #include "../kernel/debug.h"
+#include "../kernel/x86.h"
 #include "../lib/stdint.h"
 #include "../lib/common.h"
 
-#define PG_SIZE 0x1000 // 4096
 
 void* vaddr_alloc(struct vaddr_pool* v_pool, uint32_t cnt) {
     uint32_t start_idx = bitmap_scan(&v_pool->bitmap, cnt);

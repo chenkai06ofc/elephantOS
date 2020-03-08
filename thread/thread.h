@@ -5,8 +5,6 @@
 #include "../lib/stdint.h"
 #include "../lib/kernel/list.h"
 
-#define PG_SIZE     0x1000
-
 typedef void (*thread_func)(void*);
 typedef void (*process_func)(void);
 

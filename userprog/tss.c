@@ -1,4 +1,4 @@
-#include "../kernel/global.h"
+#include "../kernel/x86.h"
 #include "../lib/stdint.h"
 #include "../lib/string.h"
 #include "../lib/kernel/print.h"

@@ -1,6 +1,5 @@
 #include "string.h"
-#include "../kernel/global.h"
-#include "../lib/string.h"
+#include "../lib/stdint.h"
 
 /** set size bytes from start_ addr to value */
 void memset(void* start_, uint8_t value, uint32_t size) {

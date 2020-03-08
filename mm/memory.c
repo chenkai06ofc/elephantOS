@@ -1,13 +1,12 @@
 #include "memory.h"
 #include "bitmap.h"
 #include "addr_pool.h"
+#include "../kernel/x86.h"
 #include "../thread/thread.h"
 #include "../lib/stdint.h"
 #include "../lib/common.h"
 #include "../lib/string.h"
 #include "../lib/kernel/print.h"
-
-#define PG_SIZE 0x1000 // 4096
 
 #define MEM_BITMAP_BASE     0xc009a000
 #define KERNEL_HEAP_START   0xc0100000

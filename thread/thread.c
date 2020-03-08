@@ -1,8 +1,8 @@
 #include "thread.h"
-#include "../kernel/global.h"
-#include "../mm/memory.h"
+#include "../kernel/x86.h"
 #include "../kernel/interrupt.h"
 #include "../kernel/debug.h"
+#include "../mm/memory.h"
 #include "../userprog/tss.h"
 #include "../lib/common.h"
 #include "../lib/stdint.h"
@@ -10,7 +10,6 @@
 #include "../lib/kernel/print.h"
 #include "../lib/kernel/list.h"
 
-#define PG_SIZE     0x1000
 #define CEIL(DIVIDED, DIVISOR)      ((DIVIDED + DIVISOR - 1) / DIVISOR)
 #define USER_PROG_VADDR_START       0x08048000
 #define USER_PROG_VADDR_END         0xc0000000
@@ -20,10 +19,6 @@
 
 #define USER_STACK3_VADDR           (0xc0000000 - PG_SIZE)
 
-#define EFLAGS_MBS          (1 << 1) // must be set
-#define EFLAGS_IF1          (1 << 9) // enable interrupt
-#define EFLAGS_IF0          (0 << 9) // disable interrupt
-#define EFLAGS_IOPL0        (0 << 12)
 
 struct task_struct* main_thread;
 struct list_node ready_list_head;
@@ -116,14 +111,6 @@ static void init_user_vaddr_pool(struct vaddr_pool* v_pool) {
     bitmap_init(&v_pool->bitmap);
 }
 
-static void process_activate(struct task_struct* thread) {
-    if (thread->pgdir != NULL) {
-        update_tss_esp(thread);
-    }
-    uint32_t pde_paddr = thread->pgdir == NULL ? 0x100000 : PHY_ADDR((uint32_t)thread->pgdir);
-    asm volatile ("movl %0, %%cr3" : : "r"(pde_paddr));
-}
-
 void process_execute(char* name, process_func func) {
     struct task_struct* thread = get_kernel_pages(1);
     init_thread(thread, name, 10);
@@ -151,10 +138,15 @@ void schedule(void) {
         current->ticks = current->prio;
         list_append(&ready_list_head, &current->status_list_tag);
     }
-
     struct task_struct* next = field_to_struct_ptr(struct task_struct, status_list_tag, list_pop(&ready_list_head));
     next->status = TASK_RUNNING;
-    process_activate(next);
+    // update tss
+    if (next->pgdir != NULL) {
+        update_tss_esp(next);
+    }
+    // update page table
+    uint32_t pde_paddr = (next->pgdir == NULL) ? 0x100000 : PHY_ADDR((uint32_t)next->pgdir);
+    asm volatile ("movl %0, %%cr3" : : "r"(pde_paddr));
     switch_to(current, next);
 }
 

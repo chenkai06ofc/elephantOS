@@ -1,5 +1,5 @@
 #include "interrupt.h"
-#include "global.h"
+#include "x86.h"
 #include "../lib/stdint.h"
 #include "../lib/kernel/print.h"
 #include "../lib/kernel/io.h"
