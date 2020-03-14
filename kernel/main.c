@@ -1,4 +1,5 @@
 #include "interrupt.h"
+#include "syscall.h"
 #include "debug.h"
 #include "../lib/string.h"
 #include "../device/timer.h"
@@ -20,7 +21,7 @@ static void k_thread_a(void* args);
 static void k_thread_b(void* args);
 static void u_prog_a(void);
 static void u_prog_b(void);
-int test_a = 0, test_b = 0;
+pid_t pid_a, pid_b;
 
 int main(void) {
     intr_disable();
@@ -31,6 +32,7 @@ int main(void) {
     console_init();
     keyboard_init();
     tss_init();
+    syscall_init();
 
 //    thread_start("test1", 10, test_thread_func, "123456 ");
 //    thread_start("test2", 10, test_thread_func, "abcdef ");
@@ -48,26 +50,24 @@ int main(void) {
 
 static void k_thread_a(void* args) {
     while (1) {
-        console_put_str(" a:");
-        console_put_int(test_a);
+        console_put_str(" pid_a:");
+        console_put_int(pid_a);
     }
 }
 
 static void k_thread_b(void* args) {
     while (1) {
-        console_put_str(" b:");
-        console_put_int(test_b);
+        console_put_str(" pid_b:");
+        console_put_int(pid_b);
     }
 }
 
 static void u_prog_a(void) {
-    while(1) {
-        test_a++;
-    }
+    pid_a = getpid();
+    while (1);
 }
 
 static void u_prog_b(void) {
-    while(1) {
-        test_b+=2;
-    }
+    pid_b = getpid();
+    while (1);
 }

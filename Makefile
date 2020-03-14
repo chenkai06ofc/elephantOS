@@ -2,6 +2,7 @@ BUILD_DIR = ./build
 
 C_OBJS = kernel/main.o \
 		kernel/interrupt.o \
+		kernel/syscall.o \
 		kernel/debug.o \
 		mm/bitmap.o \
 		mm/addr_pool.o \

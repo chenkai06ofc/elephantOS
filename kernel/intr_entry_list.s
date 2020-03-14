@@ -4,9 +4,11 @@
 
 extern put_str
 extern intr_handler_list
+extern syscall_handler_list
 
 global intr_exit
 global intr_entry_list
+global syscall_entry
 
 %macro INTR_ENTRY 2
 section .text
@@ -41,6 +43,25 @@ intr_exit:
     pop ds
     add esp, 4 ; skip error_code
     iret
+
+section .text
+syscall_entry:
+    push 0
+    push ds
+    push es
+    push gs
+    push fs
+    pushad
+
+    push 0x80
+    push edx
+    push ecx
+    push ebx
+    call [syscall_handler_list + eax * 4]
+    add esp, 12
+
+    mov [esp + 8 * 4], eax
+    jmp intr_exit
 
 section .data
 intr_entry_list:

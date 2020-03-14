@@ -176,3 +176,7 @@ void thread_unblock(struct task_struct* pthread) {
     }
     set_intr_status(prev_status);
 }
+
+pid_t sys_getpid(void) {
+    return current_thread()->pid;
+}

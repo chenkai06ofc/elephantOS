@@ -7,7 +7,7 @@
 
 typedef void (*thread_func)(void*);
 typedef void (*process_func)(void);
-typedef int16_t pid_t;
+typedef uint32_t pid_t;
 
 enum task_status {
     TASK_RUNNING,
@@ -77,4 +77,6 @@ void schedule(void);
 void thread_block(void);
 void thread_unblock(struct task_struct* pthread);
 
+/** An implementation of a system call. Get pid of current thread */
+pid_t sys_getpid(void);
 #endif //__THREAD_THREAD_H

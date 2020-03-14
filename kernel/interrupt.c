@@ -1,6 +1,7 @@
 #include "interrupt.h"
 #include "x86.h"
 #include "../lib/stdint.h"
+#include "../lib/common.h"
 #include "../lib/kernel/print.h"
 #include "../lib/kernel/io.h"
 
@@ -9,7 +10,7 @@
 #define PIC_S_CTRL_PORT 0xa0
 #define PIC_S_DATA_PORT 0xa1
 
-#define IDT_DESC_CNT 0x30
+#define IDT_DESC_CNT 0x81
 
 #define VEC_NR_INVALID_OPCODE       6
 #define VEC_NR_GENERAL_PROTECTION   13
@@ -31,9 +32,10 @@ static void unrecover_exception_handler(uint8_t vec_nr);
 
 static struct gate_desc idt[IDT_DESC_CNT]; // IDT table
 static char* intr_names[IDT_DESC_CNT];
-intr_handler_addr intr_handler_list[IDT_DESC_CNT];
+func_addr intr_handler_list[IDT_DESC_CNT];
 
-extern intr_handler_addr intr_entry_list[IDT_DESC_CNT];
+extern func_addr intr_entry_list[IDT_DESC_CNT];
+extern func_addr syscall_entry;
 
 void idt_init(void) {
     put_str("idt_init start\n");
@@ -50,7 +52,7 @@ void idt_init(void) {
     asm volatile ("lidt %0" : : "m" (idt_setting));
 }
 
-void register_intr_handler(uint8_t vec_no, intr_handler_addr function) {
+void register_intr_handler(uint8_t vec_no, func_addr function) {
     intr_handler_list[vec_no] = function;
 }
 
@@ -125,7 +127,7 @@ static void general_intr_handler(uint8_t vec_nr) {
     put_str("\n");
 }
 
-static void make_idt_desc(struct gate_desc* p_desc, uint8_t attr, intr_handler_addr function) {
+static void make_idt_desc(struct gate_desc* p_desc, uint8_t attr, func_addr function) {
     p_desc->func_offset_low = ((uint32_t)function & 0x0000FFFF);
     p_desc->selector = SELECTOR_K_CODE;
     p_desc->dcount = 0;
@@ -135,9 +137,10 @@ static void make_idt_desc(struct gate_desc* p_desc, uint8_t attr, intr_handler_a
 
 static void idt_desc_init(void) {
     int i;
-    for (i = 0; i < IDT_DESC_CNT; i++) {
+    for (i = 0; i < 0x30; i++) {
         make_idt_desc(&idt[i], IDT_P_DPL0_INTR_32, intr_entry_list[i]);
     }
+    make_idt_desc(&idt[0x80], IDT_P_DPL3_INTR_32, &syscall_entry);
     put_str("idt_desc_init done\n");
 }
 

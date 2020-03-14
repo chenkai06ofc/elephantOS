@@ -10,4 +10,5 @@
 #define field_to_struct_ptr(struct_type_name, field_name, field_ptr) \
     (struct_type_name*) ((uint32_t)field_ptr - (uint32_t)(&((struct_type_name*)0)->field_name))
 
+typedef void* func_addr;
 #endif //__LIB_COMMON_H
