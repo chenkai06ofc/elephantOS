@@ -7,6 +7,7 @@
 
 typedef void (*thread_func)(void*);
 typedef void (*process_func)(void);
+typedef int16_t pid_t;
 
 enum task_status {
     TASK_RUNNING,
@@ -52,6 +53,7 @@ struct thread_stack {
 
 struct task_struct {
     uint32_t* kstack;
+    pid_t pid;
     enum task_status status;
     char name[16];
     uint8_t prio;

@@ -1,4 +1,5 @@
 #include "thread.h"
+#include "sync.h"
 #include "../kernel/x86.h"
 #include "../kernel/interrupt.h"
 #include "../kernel/debug.h"
@@ -24,6 +25,9 @@ struct task_struct* main_thread;
 struct list_node ready_list_head;
 struct list_node all_list_head;
 
+static struct lock pid_lock;
+static pid_t next_pid = 0;
+
 extern void switch_to(struct task_struct* current, struct task_struct* next);
 
 static void make_main_thread(void);
@@ -32,6 +36,7 @@ void thread_init(void) {
     put_str("thread_init start\n");
     list_init(&ready_list_head);
     list_init(&all_list_head);
+    lock_init(&pid_lock);
     make_main_thread();
     put_str("thread_init done\n");
 }
@@ -67,6 +72,11 @@ static void start_process(void* func) {
 /** init a page of memory to a task_struct structure */
 static void init_thread(struct task_struct* thread, char* name, int prio) {
     memset(thread, 0, sizeof(struct task_struct));
+
+    lock_acquire(&pid_lock);
+    thread->pid = next_pid++;
+    lock_release(&pid_lock);
+
     strcpy(thread->name, name);
     thread->status = (thread == main_thread) ? TASK_RUNNING : TASK_READY;
     thread->prio = prio;
