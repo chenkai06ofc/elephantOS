@@ -21,7 +21,7 @@ AS_OBJS = kernel/intr_entry_list.o \
 		lib/kernel/print.o \
 		thread/switch.o
 
-CFLAGS = -m32 -fno-builtin -Og
+CFLAGS = -m32 -fno-builtin -fno-stack-protector -Og
 
 all: bochs/c.img
 
@@ -33,9 +33,6 @@ lib/kernel/print.o: lib/kernel/print.s
 
 thread/switch.o: thread/switch.s
 	nasm -f elf -o $@ thread/switch.s
-
-kernel/interrupt.o: kernel/interrupt.c
-	gcc -c $(CFLAGS) -fno-stack-protector -o $@ $^
 
 # bins
 $(BUILD_DIR)/mbr.bin: $(BUILD_DIR) boot/mbr.s

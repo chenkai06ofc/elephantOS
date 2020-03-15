@@ -1,6 +1,5 @@
 #include "syscall.h"
 #include "../lib/common.h"
-#include "../thread/thread.h"
 #include "../device/console.h"
 
 #define _syscall0(syscall_no)   ({  \
@@ -42,7 +41,7 @@
 
 func_addr syscall_handler_list[SYSCALL_CNT];
 
-static uint32_t sys_write(void* buf, uint32_t count);
+static uint32_t sys_write(char* buf, uint32_t count);
 
 void syscall_init(void) {
     syscall_handler_list[NR_GETPID] = sys_getpid;

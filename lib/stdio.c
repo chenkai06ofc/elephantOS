@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "stdint.h"
 #include "common.h"
+#include "../kernel/syscall.h"
 #include "../lib/string.h"
 
 /** integer to ascii */
@@ -33,7 +34,7 @@ static void itoa(uint32_t v, char* buf, uint8_t base) {
 /** return length of str */
 uint32_t vsprintf(char* str, const char* format, va_list ap) {
     char* str_ptr = str;
-    char* format_ptr = format;
+    char* format_ptr = (char*) format;
     char ch;
     uint32_t i;
     while ((ch = *format_ptr) != 0) {
@@ -46,12 +47,16 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
                 case 'x':
                     i = va_arg(ap, uint32_t);
                     itoa(i, str_ptr, 16);
-                    while (*str_ptr++ != 0);
+                    while (*str_ptr != 0) {
+                        str_ptr++;
+                    }
                     break;
                 case 'd':
                     i = va_arg(ap, uint32_t);
                     itoa(i, str_ptr, 10);
-                    while (*str_ptr++ != 0);
+                    while (*str_ptr != 0) {
+                        str_ptr++;
+                    }
                     break;
             }
         }
@@ -65,6 +70,6 @@ uint32_t printf(const char* format, ...) {
     va_list args;
     va_start(args, format);
     char buf[1024]; // hard code buffer
-    vsprintf(buf, format, args);
-    return write(buf);
+    uint32_t cnt = vsprintf(buf, format, args);
+    return write(buf, cnt);
 }

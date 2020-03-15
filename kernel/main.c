@@ -22,7 +22,6 @@ static void k_thread_a(void* args);
 static void k_thread_b(void* args);
 static void u_prog_a(void);
 static void u_prog_b(void);
-pid_t pid_a, pid_b;
 
 int main(void) {
     intr_disable();
@@ -58,11 +57,11 @@ static void k_thread_b(void* args) {
 }
 
 static void u_prog_a(void) {
-    printf("pid of u_prog_a is: 0x%x\n", getpid());
+    printf("pid of prog_a is %d !\n", getpid());
     while (1);
 }
 
 static void u_prog_b(void) {
-    printf("pid of u_prog_b is: %d\n", getpid());
+    printf("pid of prog_b is %d !\n", getpid());
     while (1);
 }
