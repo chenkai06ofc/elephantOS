@@ -2,6 +2,7 @@
 #include "syscall.h"
 #include "debug.h"
 #include "../lib/string.h"
+#include "../lib/stdio.h"
 #include "../device/timer.h"
 #include "../device/console.h"
 #include "../device/keyboard.h"
@@ -49,25 +50,19 @@ int main(void) {
 }
 
 static void k_thread_a(void* args) {
-    while (1) {
-        console_put_str(" pid_a:");
-        console_put_int(pid_a);
-    }
+    while (1);
 }
 
 static void k_thread_b(void* args) {
-    while (1) {
-        console_put_str(" pid_b:");
-        console_put_int(pid_b);
-    }
+    while (1);
 }
 
 static void u_prog_a(void) {
-    pid_a = getpid();
+    printf("pid of u_prog_a is: 0x%x\n", getpid());
     while (1);
 }
 
 static void u_prog_b(void) {
-    pid_b = getpid();
+    printf("pid of u_prog_b is: %d\n", getpid());
     while (1);
 }

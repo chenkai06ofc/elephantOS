@@ -25,3 +25,11 @@ void console_put_int(uint32_t n) {
     put_int(n);
     lock_release(&console_lock);
 }
+
+void console_put_char_seq(char* ch, uint32_t cnt) {
+    lock_acquire(&console_lock);
+    for (int i = 0; i < cnt; i++) {
+        put_char(ch[i]);
+    }
+    lock_release(&console_lock);
+}

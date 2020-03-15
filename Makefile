@@ -14,6 +14,7 @@ C_OBJS = kernel/main.o \
 		thread/thread.o \
 		thread/sync.o \
 		lib/kernel/list.o \
+		lib/stdio.o \
 		lib/string.o
 
 AS_OBJS = kernel/intr_entry_list.o \

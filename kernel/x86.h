@@ -1,5 +1,5 @@
 /**
- * Macros related x86 architecture.
+ * Macros related to x86 architecture.
  */
 #ifndef __KERNEL_X86_H
 #define __KERNEL_X86_H
