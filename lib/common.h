@@ -17,4 +17,6 @@ typedef char* va_list;
 #define va_end(ap)          ap = NULL
 
 typedef void* func_addr;
+
+#define CEIL(DIVIDED, DIVISOR)      ((DIVIDED + DIVISOR - 1) / DIVISOR)
 #endif //__LIB_COMMON_H

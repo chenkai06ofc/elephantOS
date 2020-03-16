@@ -11,7 +11,6 @@
 #include "../lib/kernel/print.h"
 #include "../lib/kernel/list.h"
 
-#define CEIL(DIVIDED, DIVISOR)      ((DIVIDED + DIVISOR - 1) / DIVISOR)
 #define USER_PROG_VADDR_START       0x08048000
 #define USER_PROG_VADDR_END         0xc0000000
 #define USER_PROG_PAGE_CNT          ((USER_PROG_VADDR_END - USER_PROG_VADDR_START) / PG_SIZE)
