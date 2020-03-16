@@ -125,6 +125,12 @@ void process_execute(char* name, process_func func) {
     init_thread(thread, name, 10);
     thread_create(thread, start_process, func);
     thread->pgdir = create_page_dir();
+    /* init user mem_block descriptors */
+    uint32_t block_size = 16;
+    for (int i = 0; i < MEM_BLOCK_SPEC_CNT; i++) {
+        mem_block_desc_init(&thread->u_mb_descs[i], block_size);
+        block_size *= 2;
+    }
     init_user_vaddr_pool(&thread->vaddr_pool);
 
     list_append(&all_list_head, &thread->all_list_tag);

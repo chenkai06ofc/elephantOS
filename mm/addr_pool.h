@@ -23,11 +23,15 @@ struct paddr_pool {
  **/
 void* vaddr_alloc(struct vaddr_pool* v_pool, uint32_t cnt);
 
+void vaddr_dealloc(struct vaddr_pool* v_pool, void* vaddr, uint32_t cnt);
+
 /**
  *  Allocate 1 page from physical address pool
  *  Note: only addresses are allocated, page table is not yet changed.
  **/
 void* paddr_alloc(struct paddr_pool* p_pool);
+
+void paddr_dealloc(struct paddr_pool* p_pool, void* vaddr);
 
 /**
  * Allocate 1 page at a specified address.

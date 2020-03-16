@@ -38,6 +38,8 @@
 #define SYSCALL_CNT     100
 #define NR_GETPID       1
 #define NR_WRITE        2
+#define NR_MALLOC       3
+#define NR_FREE         4
 
 func_addr syscall_handler_list[SYSCALL_CNT];
 
@@ -46,6 +48,8 @@ static uint32_t sys_write(char* buf, uint32_t count);
 void syscall_init(void) {
     syscall_handler_list[NR_GETPID] = sys_getpid;
     syscall_handler_list[NR_WRITE] = sys_write;
+    syscall_handler_list[NR_MALLOC] = sys_malloc;
+    syscall_handler_list[NR_FREE] = sys_free;
 }
 
 pid_t getpid(void) {
@@ -60,4 +64,12 @@ uint32_t write(char* buf, uint32_t count) {
 static uint32_t sys_write(char* buf, uint32_t count) {
     console_put_char_seq(buf, count);
     return count;
+}
+
+void* malloc(uint32_t size_in_bytes) {
+    return (void*) _syscall1(NR_MALLOC, size_in_bytes);
+}
+
+void free(void* ptr) {
+    _syscall1(NR_FREE, ptr);
 }

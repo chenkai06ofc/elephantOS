@@ -2,6 +2,7 @@
 #define __THREAD_THREAD_H
 
 #include "../mm/addr_pool.h"
+#include "../mm/memory.h"
 #include "../lib/stdint.h"
 #include "../lib/kernel/list.h"
 
@@ -65,6 +66,7 @@ struct task_struct {
 
     void* pgdir; // virtual address of thread's page directory
     struct vaddr_pool vaddr_pool;
+    struct mem_block_desc u_mb_descs[MEM_BLOCK_SPEC_CNT]; // user mem_block descriptors
     uint32_t stack_magic;
 };
 

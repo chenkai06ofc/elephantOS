@@ -14,6 +14,9 @@
 struct paddr_pool p_kernel_pool, p_user_pool;
 struct vaddr_pool v_kernel_pool;
 
+/* kernel mem_block descriptors */
+struct mem_block_desc k_mb_descs[MEM_BLOCK_SPEC_CNT];
+
 static void map_vaddr_paddr(uint32_t vaddr, uint32_t paddr);
 
 void mem_init() {
@@ -69,6 +72,13 @@ void mem_init() {
     v_kernel_pool.vaddr_start = KERNEL_HEAP_START;
     bitmap_init(&v_kernel_pool.bitmap);
 
+    /* init kernel mem_block descriptors */
+    uint32_t block_size = 16;
+    for (int i = 0; i < MEM_BLOCK_SPEC_CNT; i++) {
+        mem_block_desc_init(&k_mb_descs[i], block_size);
+        block_size *= 2;
+    }
+
     put_str("mem_init done\n");
 }
 
@@ -87,6 +97,10 @@ static void* malloc_page(enum pool_flag pf, uint32_t cnt) {
         vaddr_scalar += PG_SIZE;
     }
     return vaddr;
+}
+
+static void dealloc_paage(enum pool_flag pf, void* vaddr, uint32_t cnt) {
+    struct vaddr_pool* v_pool = (pf == PF_KERNEL) ? &v_kernel_pool : &current_thread()->vaddr_pool;
 }
 
 void* get_kernel_pages(uint32_t cnt) {
@@ -115,4 +129,83 @@ static void map_vaddr_paddr(uint32_t vaddr, uint32_t paddr) {
         memset((void*)((uint32_t)pte_ptr & 0xfffff000), 0, PG_SIZE);
     }
     *pte_ptr = paddr | PG_US_U | PG_RW_W | PG_P_1;
+}
+
+static void unmap_vaddr(uint32_t vaddr) {
+    uint32_t* pte_ptr = PTE_PTR(vaddr);
+    *pte_ptr &= PG_P_0;
+    // update TLB
+    asm volatile("invlpg %0" : : "m" (vaddr));
+}
+
+void mem_block_desc_init(struct mem_block_desc* desc_ptr, uint32_t block_size) {
+    desc_ptr->block_size = block_size;
+    desc_ptr->cnt_per_arena = (PG_SIZE - sizeof(struct arena)) / block_size;
+    list_init(&desc_ptr->free_list_head);
+}
+
+/** return addr of ith mem_block in an arena */
+static struct mem_block* ith_block(struct arena* a, uint32_t i) {
+    return (struct mem_block*) ((uint32_t)a + sizeof(struct arena) + i * a->desc->block_size);
+}
+
+/** return containing arena of a mem_block */
+static struct arena* block2arena(struct mem_block* b) {
+    return (struct arena*) ((uint32_t)b & 0xfffff000);
+}
+
+void* sys_malloc(uint32_t size_in_bytes) {
+    struct task_struct* current = current_thread();
+    enum pool_flag flag = (current->pgdir == NULL) ? PF_KERNEL : PF_USER;
+
+    struct arena* a;
+    if (size_in_bytes > 1024) {
+        uint32_t page_cnt = CEIL(size_in_bytes + sizeof(struct arena), PG_SIZE);
+        a = malloc_page(flag, page_cnt);
+        a->desc = NULL;
+        a->free_cnt = page_cnt;
+        a->large = true;
+        return (void*) (a + 1);
+    } else {
+        struct mem_block_desc* desc = (current->pgdir == NULL) ? k_mb_descs : current->u_mb_descs;
+        while (desc->block_size < size_in_bytes) {
+            desc++;
+        }
+
+        if (list_empty(&desc->free_list_head)) {
+            a = malloc_page(flag, 1);
+            a->desc = desc;
+            a->free_cnt = desc->cnt_per_arena;
+            a->large = false;
+            for (int i = 0; i < desc->cnt_per_arena; i++) {
+                list_append(&desc->free_list_head, &ith_block(a, i)->hook);
+            }
+        }
+
+        struct mem_block* b = (struct mem_block*) list_pop(desc->free_list_head);
+        block2arena(b)->free_cnt--;
+        return (void*)b;
+    }
+}
+
+void sys_free(void* ptr) {
+    struct mem_block* b = (struct mem_block*) ptr;
+    struct arena* a = block2arena(b);
+    if (a->large) {
+        struct task_struct* current = current_thread();
+        struct paddr_pool* p_pool = (current->pgdir == NULL) ? &p_kernel_pool : &p_user_pool;
+        struct vaddr_pool* v_pool = (current->pgdir == NULL) ? &v_kernel_pool : &current->vaddr_pool;
+        uint32_t pg_cnt = a->free_cnt;
+        uint32_t page_addr = (uint32_t) a;
+        for (int i = 0; i < pg_cnt; i++) {
+            uint32_t vaddr = page_addr + i * PG_SIZE;
+            uint32_t paddr = PHY_ADDR(vaddr);
+            paddr_dealloc(p_pool, (void*) paddr);
+            unmap_vaddr(vaddr);
+        }
+        vaddr_dealloc(v_pool, (void*) vaddr, pg_cnt);
+    } else {
+        list_append(&a->desc->free_list_head, &b->hook);
+        a->free_cnt++;
+    }
 }
