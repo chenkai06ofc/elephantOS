@@ -182,7 +182,7 @@ void* sys_malloc(uint32_t size_in_bytes) {
             }
         }
 
-        struct mem_block* b = (struct mem_block*) list_pop(desc->free_list_head);
+        struct mem_block* b = (struct mem_block*) list_pop(&desc->free_list_head);
         block2arena(b)->free_cnt--;
         return (void*)b;
     }
@@ -203,7 +203,7 @@ void sys_free(void* ptr) {
             paddr_dealloc(p_pool, (void*) paddr);
             unmap_vaddr(vaddr);
         }
-        vaddr_dealloc(v_pool, (void*) vaddr, pg_cnt);
+        vaddr_dealloc(v_pool, (void*) page_addr, pg_cnt);
     } else {
         list_append(&a->desc->free_list_head, &b->hook);
         a->free_cnt++;

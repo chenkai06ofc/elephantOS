@@ -37,7 +37,7 @@ void* paddr_alloc(struct paddr_pool* p_pool) {
 
 void paddr_dealloc(struct paddr_pool* p_pool, void* vaddr) {
     uint32_t idx = ((uint32_t) vaddr - p_pool->paddr_start) / PG_SIZE;
-    bitmap_set(p_pool->bitmap, idx, 0);
+    bitmap_set(&p_pool->bitmap, idx, 0);
 }
 
 void valloc_page_at(struct vaddr_pool* v_pool, uint32_t vaddr) {

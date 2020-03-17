@@ -37,8 +37,8 @@ int main(void) {
 //    thread_start("test1", 10, test_thread_func, "123456 ");
 //    thread_start("test2", 10, test_thread_func, "abcdef ");
 //    thread_start("test3", 10, test_thread_func, "...... ");
-    thread_start("thread1", 10, k_thread_a, "argA");
-    thread_start("thread2", 10, k_thread_b, "argB");
+//    thread_start("thread1", 10, k_thread_a, "argA");
+//    thread_start("thread2", 10, k_thread_b, "argB");
     process_execute("process1", u_prog_a);
     process_execute("process2", u_prog_b);
 
@@ -58,10 +58,38 @@ static void k_thread_b(void* args) {
 
 static void u_prog_a(void) {
     printf("pid of prog_a is %d !\n", getpid());
+    void* p = malloc(20);
+    printf("20 bytes: 0x%x \n", (uint32_t)p);
+    p = malloc(10);
+    printf("10 bytes: 0x%x \n", (uint32_t)p);
+    p = malloc(30);
+    printf("30 bytes: 0x%x \n", (uint32_t)p);
+    p = malloc(500);
+    printf("500 bytes 1: 0x%x \n", (uint32_t)p);
+    free(p);
+    p = malloc(500);
+    printf("500 bytes 2: 0x%x \n", (uint32_t)p);
+    p = malloc(500);
+    printf("500 bytes 3: 0x%x \n", (uint32_t)p);
+    p = malloc(500);
+    printf("500 bytes 4: 0x%x \n", (uint32_t)p);
+    p = malloc(500);
+    printf("500 bytes 5: 0x%x \n", (uint32_t)p);
+    free(p);
+    p = malloc(500);
+    printf("500 bytes 6: 0x%x \n", (uint32_t)p);
+    p = malloc(500);
+    printf("500 bytes 7: 0x%x \n", (uint32_t)p);
+    p = malloc(500);
+    printf("500 bytes 8: 0x%x \n", (uint32_t)p);
+    p = malloc(500);
+    printf("500 bytes 9: 0x%x \n", (uint32_t)p);
     while (1);
 }
 
 static void u_prog_b(void) {
     printf("pid of prog_b is %d !\n", getpid());
+    void* p = malloc(33);
+    printf("allocated mem for prog b: 0x%x \n", (uint32_t)p);
     while (1);
 }
