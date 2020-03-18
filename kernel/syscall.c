@@ -1,6 +1,6 @@
 #include "syscall.h"
 #include "../lib/common.h"
-#include "../device/console.h"
+#include "../lib/kernel/io.h"
 
 #define _syscall0(syscall_no)   ({  \
     int retval;                 \
@@ -43,8 +43,6 @@
 
 func_addr syscall_handler_list[SYSCALL_CNT];
 
-static uint32_t sys_write(char* buf, uint32_t count);
-
 void syscall_init(void) {
     syscall_handler_list[NR_GETPID] = sys_getpid;
     syscall_handler_list[NR_WRITE] = sys_write;
@@ -58,12 +56,6 @@ pid_t getpid(void) {
 
 uint32_t write(char* buf, uint32_t count) {
     return _syscall2(NR_WRITE, buf, count);
-}
-
-/**  move this function to io.c */
-static uint32_t sys_write(char* buf, uint32_t count) {
-    console_put_char_seq(buf, count);
-    return count;
 }
 
 void* malloc(uint32_t size_in_bytes) {

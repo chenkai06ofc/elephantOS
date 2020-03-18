@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "../lib/string.h"
 #include "../lib/stdio.h"
+#include "../lib/kernel/io.h"
 #include "../device/timer.h"
 #include "../device/console.h"
 #include "../device/keyboard.h"
@@ -37,8 +38,8 @@ int main(void) {
 //    thread_start("test1", 10, test_thread_func, "123456 ");
 //    thread_start("test2", 10, test_thread_func, "abcdef ");
 //    thread_start("test3", 10, test_thread_func, "...... ");
-//    thread_start("thread1", 10, k_thread_a, "argA");
-//    thread_start("thread2", 10, k_thread_b, "argB");
+    thread_start("thread1", 10, k_thread_a, "argA");
+    thread_start("thread2", 10, k_thread_b, "argB");
     process_execute("process1", u_prog_a);
     process_execute("process2", u_prog_b);
 
@@ -49,10 +50,12 @@ int main(void) {
 }
 
 static void k_thread_a(void* args) {
+    printk("kernel printk: %d !\n", 2323);
     while (1);
 }
 
 static void k_thread_b(void* args) {
+    printk("kernel printk: 0x%x !\n", 0x67ab);
     while (1);
 }
 
