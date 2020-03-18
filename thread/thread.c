@@ -21,6 +21,7 @@
 
 
 struct task_struct* main_thread;
+struct task_struct* idle_thread;
 struct list_node ready_list_head;
 struct list_node all_list_head;
 
@@ -30,6 +31,7 @@ static pid_t next_pid = 0;
 extern void switch_to(struct task_struct* current, struct task_struct* next);
 
 static void make_main_thread(void);
+static void idle(void* arg);
 
 void thread_init(void) {
     put_str("thread_init start\n");
@@ -37,6 +39,8 @@ void thread_init(void) {
     list_init(&all_list_head);
     lock_init(&pid_lock);
     make_main_thread();
+    /* create idle thread */
+    idle_thread = thread_start("idle", 10, idle, NULL);
     put_str("thread_init done\n");
 }
 
@@ -49,6 +53,13 @@ struct task_struct* current_thread() {
 static void kernel_thread(thread_func function, void* func_arg) {
     intr_enable();
     function(func_arg);
+}
+
+static void idle(void* arg) {
+    while(1) {
+        thread_block(TASK_BLOCKED);
+        asm volatile ("sti; hlt");
+    }
 }
 
 static void start_process(void* func) {
@@ -153,6 +164,10 @@ void schedule(void) {
         current->ticks = current->prio;
         list_append(&ready_list_head, &current->status_list_tag);
     }
+    if (list_empty(&ready_list_head)) {
+        // if there's no thread in ready list, unblock the idle_thread, so it will be added to ready list
+        thread_unblock(idle_thread);
+    }
     struct task_struct* next = field_to_struct_ptr(struct task_struct, status_list_tag, list_pop(&ready_list_head));
     next->status = TASK_RUNNING;
     // update tss
@@ -179,6 +194,15 @@ void thread_unblock(struct task_struct* pthread) {
         pthread->status = TASK_READY;
         list_append(&ready_list_head, &pthread->status_list_tag);
     }
+    set_intr_status(prev_status);
+}
+
+void thread_yield(void) {
+    struct task_struct* current = current_thread();
+    enum intr_status prev_status = intr_disable();
+    current->status = TASK_READY;
+    list_append(&ready_list_head, &current->status_list_tag);
+    schedule();
     set_intr_status(prev_status);
 }
 

@@ -78,6 +78,8 @@ struct task_struct* current_thread();
 void schedule(void);
 void thread_block(void);
 void thread_unblock(struct task_struct* pthread);
+/** relinquish CPU for a moment, but add itself to ready list */
+void thread_yield(void);
 
 /** An implementation of a system call. Get pid of current thread */
 pid_t sys_getpid(void);
