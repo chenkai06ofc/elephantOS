@@ -1,7 +1,7 @@
 #ifndef __MM_ADDR_POOL_H
 #define __MM_ADDR_POOL_H
 
-#include "bitmap.h"
+#include "../lib/kernel/bitmap.h"
 #include "../lib/stdint.h"
 
 /** virtual address pool */

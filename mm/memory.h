@@ -1,8 +1,9 @@
 #ifndef __KERNEL_MEMORY_H
 #define __KERNEL_MEMORY_H
-#include "bitmap.h"
+
 #include "../lib/stdint.h"
 #include "../lib/kernel/list.h"
+#include "../lib/kernel/bitmap.h"
 
 #define PG_P_1      1
 #define PG_P_0      0

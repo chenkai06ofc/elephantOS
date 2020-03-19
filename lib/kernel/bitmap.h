@@ -1,7 +1,8 @@
 #ifndef __KERNEL_BITMAP_H
 #define __KERNEL_BITMAP_H
-#include "../lib/stdint.h"
-#include "../lib/common.h"
+
+#include "../stdint.h"
+#include "../common.h"
 struct bitmap {
     uint32_t len_in_bytes;
     uint8_t* bits;

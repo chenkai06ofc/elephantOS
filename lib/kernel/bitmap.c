@@ -1,8 +1,8 @@
 #include "bitmap.h"
-#include "../kernel/debug.h"
-#include "../lib/stdint.h"
-#include "../lib/string.h"
-#include "../lib/common.h"
+#include "../../kernel/debug.h"
+#include "../stdint.h"
+#include "../string.h"
+#include "../common.h"
 
 void bitmap_init(struct bitmap* btmp) {
     memset(btmp->bits, 0, btmp->len_in_bytes);

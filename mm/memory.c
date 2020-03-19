@@ -1,5 +1,4 @@
 #include "memory.h"
-#include "bitmap.h"
 #include "addr_pool.h"
 #include "../kernel/x86.h"
 #include "../thread/thread.h"
@@ -7,6 +6,7 @@
 #include "../lib/common.h"
 #include "../lib/string.h"
 #include "../lib/kernel/print.h"
+#include "../lib/kernel/bitmap.h"
 
 #define MEM_BITMAP_BASE     0xc009a000
 #define KERNEL_HEAP_START   0xc0100000
