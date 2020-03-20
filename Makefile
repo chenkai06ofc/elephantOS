@@ -4,7 +4,6 @@ C_OBJS = kernel/main.o \
 		kernel/interrupt.o \
 		kernel/syscall.o \
 		kernel/debug.o \
-		mm/bitmap.o \
 		mm/addr_pool.o \
 		mm/memory.o \
 		userprog/tss.o \
@@ -15,6 +14,7 @@ C_OBJS = kernel/main.o \
 		thread/sync.o \
 		lib/kernel/list.o \
 		lib/kernel/io.o \
+		lib/kernel/bitmap.o \
 		lib/stdio.o \
 		lib/string.o
 

@@ -57,7 +57,7 @@ static void kernel_thread(thread_func function, void* func_arg) {
 
 static void idle(void* arg) {
     while(1) {
-        thread_block(TASK_BLOCKED);
+        thread_block();
         asm volatile ("sti; hlt");
     }
 }
