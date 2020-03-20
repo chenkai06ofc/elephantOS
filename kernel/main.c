@@ -35,6 +35,10 @@ int main(void) {
     tss_init();
     syscall_init();
 
+    char buf[100];
+    sprintf(buf, "test %x for sprintf\n", 0xf4);
+    console_put_str(buf);
+
 //    thread_start("test1", 10, test_thread_func, "123456 ");
 //    thread_start("test2", 10, test_thread_func, "abcdef ");
 //    thread_start("test3", 10, test_thread_func, "...... ");
