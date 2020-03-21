@@ -23,6 +23,7 @@ static void k_thread_a(void* args);
 static void k_thread_b(void* args);
 static void u_prog_a(void);
 static void u_prog_b(void);
+static void u_prog_c(void);
 
 int main(void) {
     intr_disable();
@@ -46,6 +47,7 @@ int main(void) {
     thread_start("thread2", 10, k_thread_b, "argB");
     process_execute("process1", u_prog_a);
     process_execute("process2", u_prog_b);
+    process_execute("process3", u_prog_c);
 
     intr_enable();
     int a = 0;
@@ -98,5 +100,10 @@ static void u_prog_b(void) {
     printf("pid of prog_b is %d !\n", getpid());
     void* p = malloc(33);
     printf("allocated mem for prog b: 0x%x \n", (uint32_t)p);
+    while (1);
+}
+
+static void u_prog_c(void) {
+    printf("to print string %s inside\n", "hihi");
     while (1);
 }

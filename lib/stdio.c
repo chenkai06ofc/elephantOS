@@ -37,6 +37,7 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
     char* format_ptr = (char*) format;
     char ch;
     uint32_t i;
+    char* arg_str;
     while ((ch = *format_ptr) != 0) {
         if (ch != '%') {
             *(str_ptr++) = ch;
@@ -57,6 +58,11 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
                     while (*str_ptr != 0) {
                         str_ptr++;
                     }
+                    break;
+                case 's':
+                    arg_str = va_arg(ap, char*);
+                    strcpy(str_ptr, arg_str);
+                    str_ptr += strlen(arg_str);
                     break;
             }
         }
