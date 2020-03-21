@@ -5,6 +5,7 @@
 #include "../lib/string.h"
 #include "../lib/stdio.h"
 #include "../lib/kernel/io.h"
+#include "../lib/kernel/list.h"
 
 /** IO ports of channel registers */
 #define reg_data(channel)           (channel->port_base + 0)
@@ -37,6 +38,13 @@
 #define IDE0_VEC_NO             0x2e
 #define IDE1_VEC_NO             0x2f
 
+#define FS_TYPE_EXT_PART        0x5
+
+/** start lba of extended partition, set in partition_scan */
+int32_t ext_lba_base = 0;
+/** list of partition */
+struct list_node partition_list;
+
 struct ide_channel channels[2];
 
 static void ide_channel_init(struct ide_channel* channel, char* name, uint16_t port_base, uint8_t vec_no);
@@ -49,8 +57,13 @@ static void read_sector(struct disk* hd, void* buf, uint8_t sec_cnt);
 static void write_to_sector(struct disk* hd, void* buf, uint8_t sec_cnt);
 static bool busy_wait(struct disk* hd);
 
+/** acquire disk parameters */
+static void identify_disk(struct disk* hd);
+
 /** hard disk interrupt handler */
 static void hd_intr_handler(uint8_t vec_no);
+/** swap adjacent 2 bytes in dst then put in buf */
+static void swap_pairs_bytes(const char* dst, char* buf, uint32_t len)
 
 void ide_init(void) {
     printk("ide_init start\n");
@@ -58,13 +71,70 @@ void ide_init(void) {
     ASSERT(hd_cnt > 0);
     uint8_t channel_cnt = (hd_cnt > 2) ? 2 : 1;
 
+    char* hd_names[] = { "sda", "sdb", "sdc", "sdd" };
+
     ide_channel_init(&channels[0], "ide0", 0x1f0, IDE0_VEC_NO);
     register_intr_handler(channels[0].vec_no, hd_intr_handler);
+
     if (channel_cnt > 1) {
-        ide_channel_init(&channels[0], "ide1", 0x170, IDE1_VEC_NO);
+        ide_channel_init(&channels[1], "ide1", 0x170, IDE1_VEC_NO);
         register_intr_handler(channels[1].vec_no, hd_intr_handler);
     }
+
+    for (int i = 0; i < hd_cnt; i++) {
+        hd_init(&channels[i / 2], i % 2, hd_names[i]);
+    }
     printk("ide_init done\n");
+}
+
+void ide_read(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) {
+    ASSERT(sec_cnt > 0);
+    lock_acquire(&hd->my_channel->lock);
+
+    uint32_t sec_op;
+    uint32_t sec_done = 0;
+    while (sec_done < sec_cnt) {
+        sec_op = ((sec_done + 255) <= sec_cnt) ? 255 : sec_cnt - sec_done;
+        select_sector(hd, lba + sec_done, sec_op);
+        cmd_out(hd->my_channel, CMD_READ_SECTOR);
+        // thread block itself when hard disk starts to work, it's waked up by hd interrupt
+        semaphore_down(&hd->my_channel->disk_done);
+
+        if (!busy_wait(hd)) {
+            char error[64];
+            sprintf(error, "Read sector %d failed!\n", lba);
+            PANIC(error);
+        }
+
+        read_sector(hd, (void*)((uint32_t)buf + sec_done * 512), sec_op);
+        sec_done += sec_op;
+    }
+    lock_release(&hd->my_channel->lock);
+}
+
+void ide_write(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) {
+    ASSERT(sec_cnt > 0);
+    lock_acquire(&hd->my_channel->lock);
+
+    uint32_t sec_op;
+    uint32_t sec_done = 0;
+    while (sec_done < sec_cnt) {
+        sec_op = ((sec_done + 255) <= sec_cnt) ? 255 : sec_cnt - sec_done;
+        select_sector(hd, lba + sec_done, sec_op);
+        cmd_out(hd->my_channel, CMD_WRITE_SECTOR);
+
+        if (!busy_wait(hd)) {
+            char error[64];
+            sprintf(error, "Write sector %d failed!\n", lba);
+            PANIC(error);
+        }
+
+        write_to_sector(hd, (void*)((uint32_t)buf + sec_done * 512), sec_op);
+        // block itself until write operation is finished
+        semaphore_down(&hd->my_channel->disk_done);
+        sec_done += sec_op;
+    }
+    lock_release(&hd->my_channel->lock);
 }
 
 static void ide_channel_init(struct ide_channel* channel, char* name, uint16_t port_base, uint8_t vec_no) {
@@ -74,6 +144,19 @@ static void ide_channel_init(struct ide_channel* channel, char* name, uint16_t p
     channel->expecting_intr = false;
     lock_init(&channel->lock);
     semaphore_init(&channel->disk_done, 0);
+}
+
+/** length of name should < 8 */
+static void hd_init(struct ide_channel* channel, uint8_t idx, char* name) {
+    ASSERT(idx == 0 || idx == 1);
+    struct disk* hd = channel->devices[idx];
+    hd->my_channel = channel;
+    hd->dev_no = idx;
+    strcpy(hd->name, name);
+    identify_disk(hd);
+    if (idx == 1) {
+        partition_scan(hd, 0);
+    }
 }
 
 static void hd_intr_handler(uint8_t vec_no) {
@@ -132,53 +215,35 @@ static bool busy_wait(struct disk* hd) {
     return false;
 }
 
-void ide_read(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) {
-    ASSERT(sec_cnt > 0);
-    lock_acquire(&hd->my_channel->lock);
-    
-    uint32_t sec_op;
-    uint32_t sec_done = 0;
-    while (sec_done < sec_cnt) {
-        sec_op = ((sec_done + 255) <= sec_cnt) ? 255 : sec_cnt - sec_done;
-        select_sector(hd, lba + sec_done, sec_op);
-        cmd_out(hd->my_channel, CMD_READ_SECTOR);
-        // thread block itself when hard disk starts to work, it's waked up by hd interrupt
-        semaphore_down(&hd->my_channel->disk_done);
-
-        if (!busy_wait(hd)) {
-            char error[64];
-            sprintf(error, "Read sector %d failed!\n", lba);
-            PANIC(error);
-        }
-
-        read_sector(hd, (void*)((uint32_t)buf + sec_done * 512), sec_op);
-        sec_done += sec_op;
+static void swap_pairs_bytes(const char* dst, char* buf, uint32_t len) {
+    for (int i = 0; i < len; i+=2) {
+        buf[i] = dst[i + 1];
+        buf[i + 1] = dst[i];
     }
-    lock_release(&hd->my_channel->lock);
+    buf[len] = '\0';
 }
 
-void ide_write(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) {
-    ASSERT(sec_cnt > 0);
-    lock_acquire(&hd->my_channel->lock);
+static void identify_disk(struct disk* hd) {
+    char id_info[512];
+    select_disk(hd);
+    cmd_out(hd->my_channel, CMD_IDENTIFY);
+    semaphore_down($hd->my_channel->disk_done);
 
-    uint32_t sec_op;
-    uint32_t sec_done = 0;
-    while (sec_done < sec_cnt) {
-        sec_op = ((sec_done + 255) <= sec_cnt) ? 255 : sec_cnt - sec_done;
-        select_sector(hd, lba + sec_done, sec_op);
-        cmd_out(hd->my_channel, CMD_WRITE_SECTOR);
-
-        if (!busy_wait(hd)) {
-            char error[64];
-            sprintf(error, "Write sector %d failed!\n", lba);
-            PANIC(error);
-        }
-
-        write_to_sector(hd, (void*)((uint32_t)buf + sec_done * 512), sec_op);
-        // block itself until write operation is finished
-        semaphore_down(&hd->my_channel->disk_done);
-        sec_done += sec_op;
+    if (!busy_wait(hd)) {
+        char error[64];
+        sprintf(error, "%s identify failed!\n", hd->name);
+        PANIC(error);
     }
+    read_sector(hd, id_info, 1);
 
-    lock_release(&hd->my_channel->lock);
+    char buf[64];
+    uint8_t sn_start = 10 * 2, sn_len = 20, md_start = 27 * 2, md_len = 40;
+    swap_pairs_bytes(&id_info[sn_start], buf, sn_len);
+    printk("  disk %s info: \n    SN: %s\n", hd->name, buf);
+    memset(buf, 0, sizeof(buf));
+    swap_pairs_bytes(&id_info[md_start], buf, md_len);
+    printk("    MODULE: %s\n", buf);
+    uint32_t sectors = *((uint32_t*)&id_info[60 * 2]);
+    printk("    SECTORS: %d\n", sectors);
+    printk("    CAPACITY: %dMB\n", sectors * 512 / 1024 / 1024);
 }

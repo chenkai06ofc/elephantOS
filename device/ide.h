@@ -38,6 +38,26 @@ struct ide_channel {
     struct disk devices[2];
 };
 
+struct partition_table_entry {
+    uint8_t bootable;
+    uint8_t start_head;
+    uint8_t start_sec;
+    uint8_t start_chs;
+    uint8_t fs_type;
+    uint8_t end_head;
+    uint8_t end_sec;
+    uint8_t end_chs;
+    uint32_t start_lba;
+    uint32_t sec_cnt;
+} __attribute__ ((packed));
+
+/** boot sector, mbr or ebr */
+struct boot_sector {
+    uint8_t other[446];
+    struct partition_table_entry partition_table[4];
+    uint16_t signature;
+} __attribute__ ((packed));
+
 void ide_init(void);
 
 /** read sec_cnt sectors from lba to memory address buf */
