@@ -12,7 +12,7 @@ struct sleep_item {
 };
 
 void sleep_struct_init(void);
-void append_delay(struct task_struct* task, uint32_t delay);
-void proceed_idx(void (*func)(struct task_struct*));
+void sleep_list_append(struct task_struct* task, uint32_t delay);
+void proceed_time_slice(void (*func)(struct task_struct*));
 
 #endif //__THREAD_SLEEP_H

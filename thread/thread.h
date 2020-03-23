@@ -13,7 +13,8 @@ typedef uint32_t pid_t;
 enum task_status {
     TASK_RUNNING,
     TASK_READY,
-    TASK_BLOCKED
+    TASK_BLOCKED,
+    TASK_SLEEPING
 };
 
 struct intr_stack {
@@ -81,6 +82,9 @@ void thread_unblock(struct task_struct* pthread);
 /** relinquish CPU for a moment, but add itself to ready list */
 void thread_yield(void);
 
+void sleep(uint32_t ms);
+/** thread related operations that be invoked in timer intr handler */
+void thread_ops_in_timer(void);
 /** An implementation of a system call. Get pid of current thread */
 pid_t sys_getpid(void);
 #endif //__THREAD_THREAD_H

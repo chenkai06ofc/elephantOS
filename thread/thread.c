@@ -5,6 +5,7 @@
 #include "../kernel/debug.h"
 #include "../mm/memory.h"
 #include "../userprog/tss.h"
+#include "../thread/sleep.h"
 #include "../lib/common.h"
 #include "../lib/stdint.h"
 #include "../lib/string.h"
@@ -19,6 +20,8 @@
 
 #define USER_STACK3_VADDR           (0xc0000000 - PG_SIZE)
 
+#define TICKS_PER_MS                2
+
 
 struct task_struct* main_thread;
 struct task_struct* idle_thread;
@@ -27,6 +30,7 @@ struct list_node all_list_head;
 
 static struct lock pid_lock;
 static pid_t next_pid = 0;
+static uint32_t sleep_ticks = 0;
 
 extern void switch_to(struct task_struct* current, struct task_struct* next);
 
@@ -41,6 +45,7 @@ void thread_init(void) {
     make_main_thread();
     /* create idle thread */
     idle_thread = thread_start("idle", 10, idle, NULL);
+    sleep_struct_init();
     put_str("thread_init done\n");
 }
 
@@ -204,6 +209,37 @@ void thread_yield(void) {
     list_append(&ready_list_head, &current->status_list_tag);
     schedule();
     set_intr_status(prev_status);
+}
+
+void sleep(uint32_t ms) {
+    ASSERT(ms > 0);
+    uint32_t delay = ms;
+    struct task_struct* current = current_thread();
+    enum intr_status prev_status = intr_disable();
+    current->status = TASK_SLEEPING;
+    sleep_list_append(current, delay);
+    schedule();
+    set_intr_status(prev_status);
+}
+
+static void awake(struct task_struct* thread) {
+    thread->status = TASK_READY;
+    list_append(&ready_list_head, &thread->status_list_tag);
+}
+
+void thread_ops_in_timer(void) {
+    sleep_ticks++;
+    if (sleep_ticks == TICKS_PER_MS) {
+        sleep_ticks = 0;
+        proceed_time_slice(awake);
+    }
+
+    struct task_struct* current = current_thread();
+    current->ticks--;
+    current->elapsed_ticks++;
+    if (current->ticks == 0) {
+        schedule();
+    }
 }
 
 pid_t sys_getpid(void) {

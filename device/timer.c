@@ -25,12 +25,7 @@ static void frequency_set(uint8_t counter_port,
 }
 
 static void timer_intr_handler(void) {
-    struct task_struct* current = current_thread();
-    current->ticks--;
-    current->elapsed_ticks++;
-    if (current->ticks == 0) {
-        schedule();
-    }
+    thread_ops_in_timer();
 }
 
 void timer_init(void) {

@@ -21,6 +21,7 @@ void test_thread_func(void* arg) {
 
 static void k_thread_a(void* args);
 static void k_thread_b(void* args);
+static void k_thread_c(void* args);
 static void u_prog_a(void);
 static void u_prog_b(void);
 static void u_prog_c(void);
@@ -45,9 +46,10 @@ int main(void) {
 //    thread_start("test3", 10, test_thread_func, "...... ");
     thread_start("thread1", 10, k_thread_a, "argA");
     thread_start("thread2", 10, k_thread_b, "argB");
-    process_execute("process1", u_prog_a);
-    process_execute("process2", u_prog_b);
-    process_execute("process3", u_prog_c);
+    thread_start("thread2", 10, k_thread_c, "argB");
+//    process_execute("process1", u_prog_a);
+//    process_execute("process2", u_prog_b);
+//    process_execute("process3", u_prog_c);
 
     intr_enable();
     int a = 0;
@@ -56,13 +58,28 @@ int main(void) {
 }
 
 static void k_thread_a(void* args) {
-    printk("kernel printk: %d !\n", 2323);
+    printk("1 2 3 ");
+    printk("4 5 6 ");
+    sleep(400);
+    printk("7 8 9 ");
+    intr_disable();
     while (1);
 }
 
 static void k_thread_b(void* args) {
-    printk("kernel printk: 0x%x !\n", 0x67ab);
-    while (1);
+    while (1) {
+        printk("BBBBBBBB ");
+        printk("\b\b\b\b ");
+    }
+    //while (1);
+}
+
+static void k_thread_c(void* args) {
+    while (1) {
+        printk("CCCCCCCC ");
+        printk("\b\b\b\b ");
+    }
+    //while (1);
 }
 
 static void u_prog_a(void) {
