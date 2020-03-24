@@ -158,8 +158,10 @@ static void pic_init(void) {
     outb(PIC_S_DATA_PORT, 0x02); // 0000_0010b
     outb(PIC_S_DATA_PORT, 0x01); // 0000_0001b
 
-    outb(PIC_M_DATA_PORT, 0xfe);  // only enable timer interrupt
-    outb(PIC_S_DATA_PORT, 0xff);
+    // 1111_1000, enable IRQ0 timer, IRQ1 keyboard, IRQ2 slave PIC
+    outb(PIC_M_DATA_PORT, 0xf8);
+    // 1011_1111, IRQ14 hard disk
+    outb(PIC_S_DATA_PORT, 0xbf);
 
     put_str("pic_init done\n");
 }
