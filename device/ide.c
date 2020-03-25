@@ -1,6 +1,7 @@
 #include "ide.h"
 #include "../kernel/debug.h"
 #include "../kernel/interrupt.h"
+#include "../thread/thread.h"
 #include "../lib/common.h"
 #include "../lib/string.h"
 #include "../lib/stdio.h"
@@ -38,15 +39,14 @@
 #define IDE0_VEC_NO             0x2e
 #define IDE1_VEC_NO             0x2f
 
-#define FS_TYPE_EXT_PART        0x5
+#define PART_FS_TYPE_EXT        0x5
 
-/** start lba of extended partition, set in partition_scan */
-int32_t ext_lba_base = 0;
 /** list of partition */
 struct list_node partition_list;
-
+/** list of channels */
 struct ide_channel channels[2];
 
+/** init a channel with pre-defined values */
 static void ide_channel_init(struct ide_channel* channel, char* name, uint16_t port_base, uint8_t vec_no);
 
 /** these functions are somehow direct wrapper of IO port operations */
@@ -57,8 +57,13 @@ static void read_sector(struct disk* hd, void* buf, uint8_t sec_cnt);
 static void write_to_sector(struct disk* hd, void* buf, uint8_t sec_cnt);
 static bool busy_wait(struct disk* hd);
 
+static void hd_init(struct ide_channel* channel, uint8_t idx, char* name)；
 /** acquire disk parameters */
 static void identify_disk(struct disk* hd);
+/** scan hard disk and get info of all partitions */
+static void partition_scan(struct disk* hd, uint32_t ext_lba, bool is_ext);
+/** print info of the partition */
+static void partition_info(struct list_node* node);
 
 /** hard disk interrupt handler */
 static void hd_intr_handler(uint8_t vec_no);
@@ -71,19 +76,20 @@ void ide_init(void) {
     ASSERT(hd_cnt > 0);
     uint8_t channel_cnt = (hd_cnt > 2) ? 2 : 1;
 
-    char* hd_names[] = { "sda", "sdb", "sdc", "sdd" };
-
+    // init channels
     ide_channel_init(&channels[0], "ide0", 0x1f0, IDE0_VEC_NO);
     register_intr_handler(channels[0].vec_no, hd_intr_handler);
-
     if (channel_cnt > 1) {
         ide_channel_init(&channels[1], "ide1", 0x170, IDE1_VEC_NO);
         register_intr_handler(channels[1].vec_no, hd_intr_handler);
     }
 
+    // init hard disks
+    char* hd_names[] = { "sda", "sdb", "sdc", "sdd" };
     for (int i = 0; i < hd_cnt; i++) {
         hd_init(&channels[i / 2], i % 2, hd_names[i]);
     }
+    list_traverse(&partition_list, partition_info);
     printk("ide_init done\n");
 }
 
@@ -152,9 +158,12 @@ static void hd_init(struct ide_channel* channel, uint8_t idx, char* name) {
     struct disk* hd = channel->devices[idx];
     hd->my_channel = channel;
     hd->dev_no = idx;
+    hd->prim_parts_len = 0;
+    hd->logic_parts_len = 0;
     strcpy(hd->name, name);
     identify_disk(hd);
-    if (idx == 1) {
+    if (idx != 0) {
+        // don't scan 0th disk
         partition_scan(hd, 0);
     }
 }
@@ -209,7 +218,7 @@ static bool busy_wait(struct disk* hd) {
         if (!(inb(reg_status(hd->my_channel)) & BIT_ALT_STAT_BUSY)) {
             return (inb(reg_status(hd->my_channel)) & BIT_ALT_STAT_DRQ);
         } else {
-            // should sleep
+            sleep(10);
         }
     }
     return false;
@@ -246,4 +255,44 @@ static void identify_disk(struct disk* hd) {
     uint32_t sectors = *((uint32_t*)&id_info[60 * 2]);
     printk("    SECTORS: %d\n", sectors);
     printk("    CAPACITY: %dMB\n", sectors * 512 / 1024 / 1024);
+}
+
+static void partition_scan(struct disk* hd, uint32_t ext_lba, bool is_ext) {
+    struct boot_sector* bs = sys_malloc(sizeof(struct boot_sector));
+    ide_read(hd, ext_lba, bs, 1);
+
+    for (int i = 0; i < 4; i++) {
+        struct partition_table_entry* pte = &bs->partition_table[i];
+
+        if (pte->fs_type == PART_FS_TYPE_EXT) { // extended partition
+            partition_scan(hd, ext_lba + pte->start_lba, true);
+        } else if (pte->fs_type != 0) {
+            uint8_t idx;
+            if (is_ext) {
+                idx = hd->logic_parts_len;
+                hd->logic_parts[idx].start_lba = ext_lba + pte->start_lba;
+                hd->logic_parts[idx].sec_cnt = pte->sec_cnt;
+                hd->prim_parts[idx].my_disk = hd;
+                sprintf(hd->logic_parts[idx].name, "%s%d", hd->name, idx + 5);
+                list_append(&partition_list, &hd->logic_parts[idx].hook);
+                hd->logic_parts_len++;
+                ASSERT(hd->logic_parts_len < 4);
+            } else {
+                idx = hd->prim_parts_len;
+                hd->prim_parts[idx].start_lba = ext_lba + pte->start_lba;
+                hd->prim_parts[idx].sec_cnt = pte->sec_cnt;
+                hd->prim_parts[idx].my_disk = hd;
+                sprintf(hd->prim_parts[idx].name, "%s%d", hd->name, idx + 1);
+                list_append(&partition_list, &hd->prim_parts[idx].hook);
+                hd->prim_parts_len++;
+                ASSERT(hd->prim_parts_len < 4);
+            }
+        }
+    }
+    sys_free(bs);
+}
+
+static void partition_info(struct list_node* node) {
+    struct partition* part = field_to_struct_ptr(struct partition, hook, node);
+    printk("  %s start_lba: 0x%x, sec_cnt: 0x%x\n", part->name, part->start_lba, part->sec_cnt);
 }

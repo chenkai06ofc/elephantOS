@@ -26,6 +26,8 @@ struct disk {
     uint8_t dev_no;
     struct partition prim_parts[4];
     struct partition logic_parts[4];
+    uint8_t prim_parts_len;
+    uint8_t logic_parts_len;
 };
 
 struct ide_channel {
