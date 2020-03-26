@@ -258,11 +258,11 @@ static void identify_disk(struct disk* hd) {
 }
 
 static void partition_scan(struct disk* hd, uint32_t ext_lba, bool is_ext) {
-    struct boot_sector* bs = sys_malloc(sizeof(struct boot_sector));
-    ide_read(hd, ext_lba, bs, 1);
+    struct boot_sector bs;
+    ide_read(hd, ext_lba, &bs, 1);
 
     for (int i = 0; i < 4; i++) {
-        struct partition_table_entry* pte = &bs->partition_table[i];
+        struct partition_table_entry* pte = &bs.partition_table[i];
 
         if (pte->fs_type == PART_FS_TYPE_EXT) { // extended partition
             partition_scan(hd, ext_lba + pte->start_lba, true);
@@ -289,7 +289,6 @@ static void partition_scan(struct disk* hd, uint32_t ext_lba, bool is_ext) {
             }
         }
     }
-    sys_free(bs);
 }
 
 static void partition_info(struct list_node* node) {
