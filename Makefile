@@ -10,6 +10,7 @@ C_OBJS = kernel/main.o \
 		device/timer.o \
 		device/console.o \
 		device/keyboard.o \
+		device/ide.o \
 		thread/thread.o \
 		thread/sync.o \
 		thread/sleep.o \

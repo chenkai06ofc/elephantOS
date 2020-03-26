@@ -7,6 +7,7 @@
 #include "../device/timer.h"
 #include "../device/console.h"
 #include "../device/keyboard.h"
+#include "../device/ide.h"
 #include "../mm/memory.h"
 #include "../thread/thread.h"
 #include "../userprog/tss.h"
@@ -36,6 +37,7 @@ int main(void) {
     keyboard_init();
     tss_init();
     syscall_init();
+    ide_init();
 
     char buf[100];
     sprintf(buf, "test %x for sprintf\n", 0xf4);

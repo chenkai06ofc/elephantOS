@@ -57,7 +57,7 @@ static void read_sector(struct disk* hd, void* buf, uint8_t sec_cnt);
 static void write_to_sector(struct disk* hd, void* buf, uint8_t sec_cnt);
 static bool busy_wait(struct disk* hd);
 
-static void hd_init(struct ide_channel* channel, uint8_t idx, char* name)；
+static void hd_init(struct ide_channel* channel, uint8_t idx, char* name);
 /** acquire disk parameters */
 static void identify_disk(struct disk* hd);
 /** scan hard disk and get info of all partitions */
@@ -68,7 +68,7 @@ static void partition_info(struct list_node* node);
 /** hard disk interrupt handler */
 static void hd_intr_handler(uint8_t vec_no);
 /** swap adjacent 2 bytes in dst then put in buf */
-static void swap_pairs_bytes(const char* dst, char* buf, uint32_t len)
+static void swap_pairs_bytes(const char* dst, char* buf, uint32_t len);
 
 void ide_init(void) {
     printk("ide_init start\n");
@@ -144,7 +144,7 @@ void ide_write(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) {
 }
 
 static void ide_channel_init(struct ide_channel* channel, char* name, uint16_t port_base, uint8_t vec_no) {
-    strcpy(&channel->name, name);
+    strcpy(channel->name, name);
     channel->port_base = port_base;
     channel->vec_no = vec_no;
     channel->expecting_intr = false;
@@ -155,7 +155,7 @@ static void ide_channel_init(struct ide_channel* channel, char* name, uint16_t p
 /** length of name should < 8 */
 static void hd_init(struct ide_channel* channel, uint8_t idx, char* name) {
     ASSERT(idx == 0 || idx == 1);
-    struct disk* hd = channel->devices[idx];
+    struct disk* hd = &channel->devices[idx];
     hd->my_channel = channel;
     hd->dev_no = idx;
     hd->prim_parts_len = 0;
@@ -164,7 +164,7 @@ static void hd_init(struct ide_channel* channel, uint8_t idx, char* name) {
     identify_disk(hd);
     if (idx != 0) {
         // don't scan 0th disk
-        partition_scan(hd, 0);
+        partition_scan(hd, 0, false);
     }
 }
 
@@ -236,7 +236,7 @@ static void identify_disk(struct disk* hd) {
     char id_info[512];
     select_disk(hd);
     cmd_out(hd->my_channel, CMD_IDENTIFY);
-    semaphore_down($hd->my_channel->disk_done);
+    semaphore_down(&hd->my_channel->disk_done);
 
     if (!busy_wait(hd)) {
         char error[64];
