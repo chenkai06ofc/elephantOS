@@ -58,6 +58,14 @@ char* strcpy(char* dst_, const char* src_) {
     }
     return r;
 }
+/** compare 2 strings, 1: a > b, 0: a == b, -1; a < b */
+uint8_t strcmp(const char* a, const char* b) {
+    while (*a != 0 & *a == *b) {
+        a++;
+        b++;
+    }
+    return (*a < *b) ? -1 : ((*a > *b) ? 1 : 0);
+}
 
 /** length of string */
 uint32_t strlen(const char* str) {
