@@ -38,6 +38,7 @@ int main(void) {
     tss_init();
     syscall_init();
     ide_init();
+    filesys_init();
 
     char buf[100];
     sprintf(buf, "test %x for sprintf\n", 0xf4);

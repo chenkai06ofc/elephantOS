@@ -19,11 +19,31 @@ enum file_type {
     FT_DIR
 };
 
+extern struct list_node partition_list;
+
 /** find max value */
 static uint32_t max(uint32_t a, uint32_t b, uint32_t c);
+static create_filesys_for_part(struct list_node* node);
+
+void filesys_init() {
+    list_traverse(&partition_list, create_filesys_for_part);
+}
+
+static create_filesys_for_part(struct list_node* node) {
+    struct partition* part = field_to_struct_ptr(struct partition, hook, node);
+    struct super_block sb;
+    // read in super block
+    ide_read(part->my_disk, part->start_lba + 1, sb, 1);
+    if (sb.magic == 0x20200303) {
+        printk("  %s already has file system.\n", part->name);
+    } else {
+        printk("  formatting partition %s.....\n", part->name);
+        partition_format(part);
+    }
+}
 
 static void partition_format(struct partition* part) {
-    printk("format partition %s, start", part->name);
+    printk("format partition %s, start\n", part->name);
     // format boot sector, super block, block bitmap, inode bitmap, inode table, data area
     uint32_t boot_sector_sec_cnt = 1;
     uint32_t super_block_sec_cnt = 1;
@@ -105,7 +125,7 @@ static void partition_format(struct partition* part) {
     dir_p->f_type = FT_DIR;
     ide_write(hd, sb.data_start_lba, buf, 1);
 
-    printk("format partition %s, done", part->name);
+    printk("format partition %s, done\n", part->name);
     sys_free(buf);
 }
 
