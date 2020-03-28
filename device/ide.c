@@ -72,6 +72,8 @@ static void swap_pairs_bytes(const char* dst, char* buf, uint32_t len);
 
 void ide_init(void) {
     printk("ide_init start\n");
+    list_init(&partition_list);
+
     uint8_t hd_cnt = *((uint8_t*)(0x475));
     ASSERT(hd_cnt > 0);
     uint8_t channel_cnt = (hd_cnt > 2) ? 2 : 1;
