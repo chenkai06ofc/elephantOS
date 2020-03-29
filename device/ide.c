@@ -41,7 +41,7 @@
 
 #define PART_FS_TYPE_EXT        0x5
 
-/** list of partition */
+/** list of partition. Its content will be filled in partition_scan*/
 struct list_node partition_list;
 /** list of channels */
 struct ide_channel channels[2];
@@ -260,6 +260,7 @@ static void identify_disk(struct disk* hd) {
 }
 
 static void partition_scan(struct disk* hd, uint32_t ext_lba, bool is_ext) {
+    printk("partition_scan start at %s ext_lba: %d\n", hd->name, ext_lba);
     struct boot_sector bs;
     ide_read(hd, ext_lba, &bs, 1);
 
@@ -278,7 +279,7 @@ static void partition_scan(struct disk* hd, uint32_t ext_lba, bool is_ext) {
                 sprintf(hd->logic_parts[idx].name, "%s%d", hd->name, idx + 5);
                 list_append(&partition_list, &hd->logic_parts[idx].hook);
                 hd->logic_parts_len++;
-                ASSERT(hd->logic_parts_len < 4);
+                ASSERT(hd->logic_parts_len <= 4);
             } else {
                 idx = hd->prim_parts_len;
                 hd->prim_parts[idx].start_lba = ext_lba + pte->start_lba;
@@ -287,10 +288,11 @@ static void partition_scan(struct disk* hd, uint32_t ext_lba, bool is_ext) {
                 sprintf(hd->prim_parts[idx].name, "%s%d", hd->name, idx + 1);
                 list_append(&partition_list, &hd->prim_parts[idx].hook);
                 hd->prim_parts_len++;
-                ASSERT(hd->prim_parts_len < 4);
+                ASSERT(hd->prim_parts_len <= 4);
             }
         }
     }
+    printk("partition_scan done %s ext_lba: %d\n", hd->name, ext_lba);
 }
 
 static void partition_info(struct list_node* node) {

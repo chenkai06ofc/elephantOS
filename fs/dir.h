@@ -1,6 +1,7 @@
 #ifndef __FS_DIR_H
 #define __FS_DIR_H
 
+#include "fs.h"
 #include "../lib/stdint.h"
 
 #define MAX_FILE_NAME_LEN 16

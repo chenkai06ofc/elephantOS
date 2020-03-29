@@ -10,6 +10,7 @@
 #include "../device/ide.h"
 #include "../mm/memory.h"
 #include "../thread/thread.h"
+#include "../fs/fs.h"
 #include "../userprog/tss.h"
 
 void test_thread_func(void* arg) {

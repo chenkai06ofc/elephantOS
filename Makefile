@@ -14,6 +14,7 @@ C_OBJS = kernel/main.o \
 		thread/thread.o \
 		thread/sync.o \
 		thread/sleep.o \
+		fs/fs.o \
 		lib/kernel/list.o \
 		lib/kernel/io.o \
 		lib/kernel/bitmap.o \

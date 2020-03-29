@@ -13,42 +13,40 @@
 #define BITS_PER_SECTOR     (SECTOR_SIZE * 8)
 #define BLOCK_SIZE          SECTOR_SIZE
 
-enum file_type {
-    FT_UNKNOWN,
-    FT_REGULAR,
-    FT_DIR
-};
 
 extern struct list_node partition_list;
 
 /** find max value */
 static uint32_t max(uint32_t a, uint32_t b, uint32_t c);
-static create_filesys_for_part(struct list_node* node);
+
+static void partition_format(struct partition* part);
+static void create_filesys_for_part(struct list_node* node);
+static void print_super_block(struct partition* part, struct super_block* sb);
 
 void filesys_init() {
     list_traverse(&partition_list, create_filesys_for_part);
 }
 
-static create_filesys_for_part(struct list_node* node) {
+static void create_filesys_for_part(struct list_node* node) {
     struct partition* part = field_to_struct_ptr(struct partition, hook, node);
     struct super_block sb;
     // read in super block
-    ide_read(part->my_disk, part->start_lba + 1, sb, 1);
+    ide_read(part->my_disk, part->start_lba + 1, &sb, 1);
     if (sb.magic == 0x20200303) {
         printk("  %s already has file system.\n", part->name);
     } else {
-        printk("  formatting partition %s.....\n", part->name);
+        printk("  format partition %s, start\n", part->name);
         partition_format(part);
+        printk("  format partition %s, done\n", part->name);
     }
 }
 
 static void partition_format(struct partition* part) {
-    printk("format partition %s, start\n", part->name);
     // format boot sector, super block, block bitmap, inode bitmap, inode table, data area
     uint32_t boot_sector_sec_cnt = 1;
     uint32_t super_block_sec_cnt = 1;
     uint32_t inode_bitmap_sec_cnt = CEIL(MAX_FILES_PER_PART, BITS_PER_SECTOR);
-    uint32_t inode_table_sec_cnt = CEIL(MAX_FILES_PER_PART * sizeof(struct inode));
+    uint32_t inode_table_sec_cnt = CEIL(MAX_FILES_PER_PART * sizeof(struct inode), SECTOR_SIZE);
 
     uint32_t used_sec_cnt = boot_sector_sec_cnt + super_block_sec_cnt + inode_bitmap_sec_cnt + inode_table_sec_cnt;
     uint32_t free_sec_cnt = part->sec_cnt - used_sec_cnt;
@@ -80,9 +78,10 @@ static void partition_format(struct partition* part) {
 
     /* 1. write super_block to 1st sector */
     ide_write(hd, part->start_lba + 1, &sb, 1);
-    printk("write super block finished");
+    printk("write super block finished\n");
 
-    uint32_t buf_size = max(sb.block_bitmap_sec_cnt, sb.inode_bitmap_sec_cnt, sb.inode_table_sec_cnt);
+    // buf_size is in bytes
+    uint32_t buf_size = max(sb.block_bitmap_sec_cnt, sb.inode_bitmap_sec_cnt, sb.inode_table_sec_cnt) * SECTOR_SIZE;
     uint8_t* buf = (uint8_t*)sys_malloc(buf_size);
 
     /* 2. init block bitmap & write into sb.block_bitmap_lba */
@@ -97,11 +96,13 @@ static void partition_format(struct partition* part) {
         buf[last_byte] &= ~(1 << i);
     }
     ide_write(hd, sb.block_bitmap_lba, buf, sb.block_bitmap_sec_cnt);
+    printk("write block bitmap finished\n");
 
     /* 3. init inode bitmap & write into sb.inode_bitmap_lba */
     memset(buf, 0, buf_size);
     buf[0] = 1; // 0th inode is reserved for root directory
     ide_write(hd, sb.inode_bitmap_lba, buf, sb.inode_bitmap_sec_cnt);
+    printk("write inode bitmap finished\n");
 
     /* 4. init inode table & write into sb.inode_table_lba */
     memset(buf, 0, buf_size);
@@ -110,6 +111,7 @@ static void partition_format(struct partition* part) {
     i->i_no = 0;
     i->sectors[0] = sb.data_start_lba;
     ide_write(hd, sb.inode_table_lba, buf, sb.inode_table_sec_cnt);
+    printk("write inode table finished\n");
 
     /* 5. write root directory into sb.data_start_lba */
     memset(buf, 0, buf_size);
@@ -125,7 +127,6 @@ static void partition_format(struct partition* part) {
     dir_p->f_type = FT_DIR;
     ide_write(hd, sb.data_start_lba, buf, 1);
 
-    printk("format partition %s, done\n", part->name);
     sys_free(buf);
 }
 
