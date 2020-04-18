@@ -3,6 +3,7 @@
 #include "dir.h"
 #include "inode.h"
 #include "../kernel/debug.h"
+#include "../kernel/x86.h"
 #include "../device/ide.h"
 #include "../lib/stdint.h"
 #include "../lib/common.h"
@@ -10,10 +11,8 @@
 #include "../lib/kernel/io.h"
 
 #define MAX_FILES_PER_PART  4096
-#define SECTOR_SIZE         512
 #define BITS_PER_SECTOR     (SECTOR_SIZE * 8)
 #define BLOCK_SIZE          SECTOR_SIZE
-
 
 extern struct list_node partition_list;
 

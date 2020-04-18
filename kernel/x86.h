@@ -4,6 +4,7 @@
 #ifndef __KERNEL_X86_H
 #define __KERNEL_X86_H
 
+#define SECTOR_SIZE         512
 #define PG_SIZE             0x1000  // 4096
 
 // eflags
