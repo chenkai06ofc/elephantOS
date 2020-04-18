@@ -2,6 +2,7 @@
 #include "super_block.h"
 #include "dir.h"
 #include "inode.h"
+#include "../kernel/debug.h"
 #include "../device/ide.h"
 #include "../lib/stdint.h"
 #include "../lib/common.h"
@@ -16,15 +17,33 @@
 
 extern struct list_node partition_list;
 
+struct partition* cur_part;
+
 /** find max value */
 static uint32_t max(uint32_t a, uint32_t b, uint32_t c);
 
 static void partition_format(struct partition* part);
 static void create_filesys_for_part(struct list_node* node);
+static void mount_partition(struct partition* part);
 static void print_super_block(struct partition* part, struct super_block* sb);
 
 void filesys_init() {
     list_traverse(&partition_list, create_filesys_for_part);
+
+    char target_part[8] = "sdb1";
+    struct list_node* node = partition_list.next;
+    while (node != &partition_list) {
+        struct partition* part = field_to_struct_ptr(struct partition, hook, node);
+        if (strcmp(part->name, target_part) == 0) {
+            mount_partition(part);
+            break;
+        }
+        node = node->next;
+    }
+
+    if (node == &partition_list) {
+        PANIC("Target partition not found.");
+    }
 }
 
 static void create_filesys_for_part(struct list_node* node) {
@@ -130,6 +149,38 @@ static void partition_format(struct partition* part) {
 
     sys_free(buf);
     sys_free(sb);
+}
+
+static void mount_partition(struct partition* part) {
+    cur_part = part;
+    struct super_block* sb = (struct super_block*)sys_malloc(SECTOR_SIZE);
+    if (sb == NULL) {
+        PANIC("alloc memory for super_block failed!");
+    }
+    cur_part->sb = sb;
+
+    // read super block from disk
+    memset(sb, 0, SECTOR_SIZE);
+    ide_read(cur_part->my_disk, cur_part->start_lba + 1, sb, 1);
+
+    // read block bitmap from disk
+    cur_part->block_bitmap.bits = (uint8_t*)sys_malloc(sb->block_bitmap_sec_cnt * SECTOR_SIZE);
+    if (cur_part->block_bitmap.bits == NULL) {
+        PANIC("alloc memory for block bitmap failed!");
+    }
+    cur_part->block_bitmap.len_in_bytes = sb->block_bitmap_sec_cnt * SECTOR_SIZE;
+    ide_read(cur_part->my_disk, sb->block_bitmap_lba, cur_part->block_bitmap.bits, sb->block_bitmap_sec_cnt);
+
+    // read inode bitmap from disk
+    cur_part->inode_bitmap.bits = (uint8_t*)sys_malloc(sb->inode_bitmap_sec_cnt * SECTOR_SIZE);
+    if (cur_part->inode_bitmap.bits == NULL) {
+        PANIC("alloc memory for inode bitmap failed!");
+    }
+    cur_part->inode_bitmap.len_in_bytes = sb->inode_bitmap_sec_cnt * SECTOR_SIZE;
+    ide_read(cur_part->my_disk, sb->inode_bitmap_lba, cur_part->inode_bitmap.bits, sb->inode_bitmap_sec_cnt);
+
+    list_init(&cur_part->open_inodes);
+    printk("mount %s done!\n", cur_part->name);
 }
 
 static void print_super_block(struct partition* part, struct super_block* sb) {
