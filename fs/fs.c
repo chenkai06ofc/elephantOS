@@ -50,7 +50,7 @@ static void create_filesys_for_part(struct list_node* node) {
     struct partition* part = field_to_struct_ptr(struct partition, hook, node);
     struct super_block* sb = (struct super_block*)sys_malloc(SECTOR_SIZE);
     // read in super block
-    ide_read(part->my_disk, part->start_lba + 1, sb, 1);
+    ide_read(part->my_disk, part->start_lba + 1, 1, sb);
     if (sb->magic == 0x20200303) {
         printk("  %s already has file system.\n", part->name);
     } else {
@@ -97,7 +97,7 @@ static void partition_format(struct partition* part) {
     struct disk* hd = part->my_disk;
 
     /* 1. write super_block to 1st sector */
-    ide_write(hd, part->start_lba + 1, sb, 1);
+    ide_write(hd, part->start_lba + 1, 1, sb);
     printk("write super block finished\n");
 
     // buf_size is in bytes
@@ -115,13 +115,13 @@ static void partition_format(struct partition* part) {
     for (uint32_t i = 0; i <= last_bit; i++) {
         buf[last_byte] &= ~(1 << i);
     }
-    ide_write(hd, sb->block_bitmap_lba, buf, sb->block_bitmap_sec_cnt);
+    ide_write(hd, sb->block_bitmap_lba, sb->block_bitmap_sec_cnt, buf);
     printk("write block bitmap finished\n");
 
     /* 3. init inode bitmap & write into sb->inode_bitmap_lba */
     memset(buf, 0, buf_size);
     buf[0] = 1; // 0th inode is reserved for root directory
-    ide_write(hd, sb->inode_bitmap_lba, buf, sb->inode_bitmap_sec_cnt);
+    ide_write(hd, sb->inode_bitmap_lba, sb->inode_bitmap_sec_cnt, buf);
     printk("write inode bitmap finished\n");
 
     /* 4. init inode table & write into sb->inode_table_lba */
@@ -130,7 +130,7 @@ static void partition_format(struct partition* part) {
     i->size = sb->dir_entry_size * 2; // . and ..
     i->i_no = 0;
     i->sectors[0] = sb->data_start_lba;
-    ide_write(hd, sb->inode_table_lba, buf, sb->inode_table_sec_cnt);
+    ide_write(hd, sb->inode_table_lba, sb->inode_table_sec_cnt, buf);
     printk("write inode table finished\n");
 
     /* 5. write root directory into sb->data_start_lba */
@@ -145,7 +145,7 @@ static void partition_format(struct partition* part) {
     strcpy(dir_p->filename, "..");
     dir_p->i_no = 0;
     dir_p->f_type = FT_DIR;
-    ide_write(hd, sb->data_start_lba, buf, 1);
+    ide_write(hd, sb->data_start_lba, 1, buf);
 
     sys_free(buf);
     sys_free(sb);
@@ -161,7 +161,7 @@ static void mount_partition(struct partition* part) {
 
     // read super block from disk
     memset(sb, 0, SECTOR_SIZE);
-    ide_read(cur_part->my_disk, cur_part->start_lba + 1, sb, 1);
+    ide_read(cur_part->my_disk, cur_part->start_lba + 1, 1, sb);
 
     // read block bitmap from disk
     cur_part->block_bitmap.bits = (uint8_t*)sys_malloc(sb->block_bitmap_sec_cnt * SECTOR_SIZE);
@@ -169,7 +169,7 @@ static void mount_partition(struct partition* part) {
         PANIC("alloc memory for block bitmap failed!");
     }
     cur_part->block_bitmap.len_in_bytes = sb->block_bitmap_sec_cnt * SECTOR_SIZE;
-    ide_read(cur_part->my_disk, sb->block_bitmap_lba, cur_part->block_bitmap.bits, sb->block_bitmap_sec_cnt);
+    ide_read(cur_part->my_disk, sb->block_bitmap_lba, sb->block_bitmap_sec_cnt, cur_part->block_bitmap.bits);
 
     // read inode bitmap from disk
     cur_part->inode_bitmap.bits = (uint8_t*)sys_malloc(sb->inode_bitmap_sec_cnt * SECTOR_SIZE);
@@ -177,7 +177,7 @@ static void mount_partition(struct partition* part) {
         PANIC("alloc memory for inode bitmap failed!");
     }
     cur_part->inode_bitmap.len_in_bytes = sb->inode_bitmap_sec_cnt * SECTOR_SIZE;
-    ide_read(cur_part->my_disk, sb->inode_bitmap_lba, cur_part->inode_bitmap.bits, sb->inode_bitmap_sec_cnt);
+    ide_read(cur_part->my_disk, sb->inode_bitmap_lba, sb->inode_bitmap_sec_cnt, cur_part->inode_bitmap.bits);
 
     list_init(&cur_part->open_inodes);
     printk("mount %s done!\n", cur_part->name);

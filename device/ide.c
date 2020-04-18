@@ -95,7 +95,7 @@ void ide_init(void) {
     printk("ide_init done\n");
 }
 
-void ide_read(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) {
+void ide_read(struct disk* hd, uint32_t lba, uint32_t sec_cnt, void* buf) {
     ASSERT(sec_cnt > 0);
     lock_acquire(&hd->my_channel->lock);
 
@@ -120,7 +120,7 @@ void ide_read(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) {
     lock_release(&hd->my_channel->lock);
 }
 
-void ide_write(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) {
+void ide_write(struct disk* hd, uint32_t lba, uint32_t sec_cnt, void* buf) {
     ASSERT(sec_cnt > 0);
     lock_acquire(&hd->my_channel->lock);
 
@@ -262,7 +262,7 @@ static void identify_disk(struct disk* hd) {
 static void partition_scan(struct disk* hd, uint32_t ext_lba, bool is_ext) {
     printk("partition_scan start at %s ext_lba: %d\n", hd->name, ext_lba);
     struct boot_sector bs;
-    ide_read(hd, ext_lba, &bs, 1);
+    ide_read(hd, ext_lba, 1, &bs);
 
     for (int i = 0; i < 4; i++) {
         struct partition_table_entry* pte = &bs.partition_table[i];

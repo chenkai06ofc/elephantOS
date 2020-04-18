@@ -63,8 +63,8 @@ struct boot_sector {
 void ide_init(void);
 
 /** read sec_cnt sectors from lba to memory address buf */
-void ide_read(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt);
+void ide_read(struct disk* hd, uint32_t lba, uint32_t sec_cnt, void* buf);
 /** write sec_cnt sectors from memory address buf to lba */
-void ide_write(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt);
+void ide_write(struct disk* hd, uint32_t lba, uint32_t sec_cnt, void* buf);
 
 #endif //__DEVICE__IDE_H
